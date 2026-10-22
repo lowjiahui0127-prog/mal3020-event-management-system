@@ -5,6 +5,7 @@ const ALLOWED_FIELDS = [
   'title',
   'description',
   'date',
+  'endDate',
   'location',
   'capacity',
   'status'
@@ -21,6 +22,27 @@ function pickAllowedFields(body) {
   }
 
   return data;
+}
+
+// Validate event start and end times
+function validateEventTimes(data) {
+  const start = new Date(data.date);
+  const end = new Date(data.endDate);
+
+  if (
+    !data.date ||
+    !data.endDate ||
+    Number.isNaN(start.getTime()) ||
+    Number.isNaN(end.getTime())
+  ) {
+    return 'A valid start date and end date are required';
+  }
+
+  if (end <= start) {
+    return 'End date must be later than start date';
+  }
+
+  return null;
 }
 
 // Handle validation errors and unexpected server errors
@@ -46,7 +68,18 @@ function handleError(res, error, fallbackMessage) {
 // GET /api/events
 exports.getEvents = async (req, res) => {
   try {
-    const events = await Event.find().sort({ date: 1 });
+    const now = new Date();
+
+    const events = await Event.find({
+      status: 'published',
+      $or: [
+        { endDate: { $gte: now } },
+        {
+          endDate: { $exists: false },
+          date: { $gte: now }
+        }
+      ]
+    }).sort({ date: 1 });
 
     return res.status(200).json({
       success: true,
@@ -91,9 +124,17 @@ exports.getEventById = async (req, res) => {
 // POST /api/events
 exports.createEvent = async (req, res) => {
   try {
-    const event = await Event.create(
-      pickAllowedFields(req.body)
-    );
+    const data = pickAllowedFields(req.body);
+    const timeError = validateEventTimes(data);
+
+    if (timeError) {
+      return res.status(400).json({
+        success: false,
+        message: timeError
+      });
+    }
+
+    const event = await Event.create(data);
 
     return res.status(201).json({
       success: true,
@@ -116,25 +157,37 @@ exports.updateEvent = async (req, res) => {
       });
     }
 
-    const event = await Event.findByIdAndUpdate(
-      id,
-      pickAllowedFields(req.body),
-      {
-        new: true,
-        runValidators: true
-      }
-    );
+    const existingEvent = await Event.findById(id);
 
-    if (!event) {
+    if (!existingEvent) {
       return res.status(404).json({
         success: false,
         message: 'Event not found'
       });
     }
 
+    const updates = pickAllowedFields(req.body);
+
+    const mergedData = {
+      date: updates.date ?? existingEvent.date,
+      endDate: updates.endDate ?? existingEvent.endDate
+    };
+
+    const timeError = validateEventTimes(mergedData);
+
+    if (timeError) {
+      return res.status(400).json({
+        success: false,
+        message: timeError
+      });
+    }
+
+    Object.assign(existingEvent, updates);
+    await existingEvent.save();
+
     return res.status(200).json({
       success: true,
-      data: event
+      data: existingEvent
     });
   } catch (error) {
     return handleError(res, error, 'Failed to update event');

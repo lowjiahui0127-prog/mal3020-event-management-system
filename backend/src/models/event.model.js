@@ -20,6 +20,17 @@ const eventSchema = new mongoose.Schema(
       required: [true, 'Date is required']
     },
 
+    endDate: {
+      type: Date,
+      required: [true, 'End date is required'],
+      validate: {
+        validator: function (value) {
+          return !this.date || value > this.date;
+        },
+        message: 'End date must be later than start date'
+      }
+    },
+
     location: {
       type: String,
       required: [true, 'Location is required'],

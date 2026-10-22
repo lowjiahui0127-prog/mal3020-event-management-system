@@ -8,9 +8,11 @@ const Event = require('../src/models/event.model');
 const validEvent = {
   title: 'Docker Workshop',
   description: 'Introduction to containers',
-  date: '2026-12-10T09:00:00',
+  date: '2026-12-10T09:00:00+08:00',
+  endDate: '2026-12-10T11:00:00+08:00',
   location: 'Hall A',
-  capacity: 50
+  capacity: 50,
+  status: 'published'
 };
 
 beforeAll(async () => {
@@ -75,21 +77,81 @@ describe('POST /api/events', () => {
   });
 });
 
+it('should reject an event when end date is before start date', async () => {
+    const response = await request(app)
+      .post('/api/events')
+      .send({
+        title: 'Invalid Event',
+        description: 'Invalid time range',
+        date: '2026-12-10T11:00:00+08:00',
+        endDate: '2026-12-10T09:00:00+08:00',
+        location: 'Hall A',
+        capacity: 30,
+        status: 'published'
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toMatch(/End date must be later/i);
+  });
+
+
 describe('GET /api/events', () => {
-  it('returns all events', async () => {
-    await Event.create(validEvent);
+  it('returns only published events that have not ended', async () => {
+    const now = Date.now();
+
+    const futureStart = new Date(now + 60 * 60 * 1000);
+    const futureEnd = new Date(now + 2 * 60 * 60 * 1000);
+
+    const pastStart = new Date(now - 3 * 60 * 60 * 1000);
+    const pastEnd = new Date(now - 2 * 60 * 60 * 1000);
+
+    // Published and not ended: should be returned
     await Event.create({
       ...validEvent,
-      title: 'Angular Talk'
+      title: 'Upcoming Workshop',
+      date: futureStart,
+      endDate: futureEnd,
+      status: 'published'
+    });
+
+    // Draft: should not be returned
+    await Event.create({
+      ...validEvent,
+      title: 'Draft Workshop',
+      date: futureStart,
+      endDate: futureEnd,
+      status: 'draft'
+    });
+
+    // Cancelled: should not be returned
+    await Event.create({
+      ...validEvent,
+      title: 'Cancelled Workshop',
+      date: futureStart,
+      endDate: futureEnd,
+      status: 'cancelled'
+    });
+
+    // Already ended: should not be returned
+    await Event.create({
+      ...validEvent,
+      title: 'Past Workshop',
+      date: pastStart,
+      endDate: pastEnd,
+      status: 'published'
     });
 
     const res = await request(app).get('/api/events');
 
     expect(res.statusCode).toBe(200);
-    expect(res.body.count).toBe(2);
-    expect(res.body.data).toHaveLength(2);
+    expect(res.body.success).toBe(true);
+    expect(res.body.count).toBe(1);
+    expect(res.body.data).toHaveLength(1);
+    expect(res.body.data[0].title).toBe('Upcoming Workshop');
   });
 });
+
 
 describe('GET /api/events/:id', () => {
   it('returns one event', async () => {

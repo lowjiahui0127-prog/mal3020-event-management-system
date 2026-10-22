@@ -1,0 +1,93 @@
+<section class="page">
+  <header class="page-header">
+    <p class="eyebrow">ON CAMPUS · EVENTS</p>
+    <h1>Find your next campus experience.</h1>
+    <p class="subtitle">
+      Learn something new, meet your people and make more of university life.
+    </p>
+  </header>
+
+  @if (loading()) {
+    <p class="message">Loading events...</p>
+  } @else if (errorMessage()) {
+    <div class="message error">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" (click)="loadEvents()">Try again</button>
+    </div>
+  } @else if (events().length === 0) {
+    <div class="empty-state">
+      <h2>No events yet</h2>
+      <p>Check back soon for upcoming campus events.</p>
+    </div>
+  } @else {
+    <div class="toolbar">
+      <label class="search-box">
+        <span class="visually-hidden">Search events</span>
+        <input
+          #searchInput
+          type="search"
+          placeholder="Search events by title or location"
+          [value]="searchTerm()"
+          (input)="onSearch(searchInput.value)"
+        />
+      </label>
+      <span class="count">{{ filteredEvents().length }} upcoming events</span>
+    </div>
+
+    @if (filteredEvents().length === 0) {
+      <div class="empty-state">
+        <h2>No matching events</h2>
+        <p>Try a different title or location.</p>
+      </div>
+    } @else {
+      <section class="event-grid" aria-label="Available events">
+        @for (item of filteredEvents(); track item._id) {
+          <article class="event-card">
+            <div class="event-image">
+              <div class="date-badge">
+                <span>{{ item.date | date: 'MMM' }}</span>
+                <strong>{{ item.date | date: 'dd' }}</strong>
+              </div>
+              <span class="image-placeholder">EVENTHUB</span>
+            </div>
+
+            <div class="event-content">
+              <h2>{{ item.title }}</h2>
+
+              <p class="event-meta">
+                <fa-icon [icon]="faClock" aria-hidden="true" />
+                <span class="meta-text">
+                    {{ item.date | date: 'EEE, d MMM y · HH:mm' }}
+                    @if (item.endDate) {
+                        – {{ item.endDate | date: 'HH:mm' }}
+                    }
+                </span>
+              </p>
+
+              <p class="event-meta">
+                <fa-icon [icon]="faLocationDot" aria-hidden="true" />
+                <span class="meta-text">{{ item.location }}</span>
+              </p>
+
+              <div class="event-footer">
+                <button
+                  type="button"
+                  class="details-button"
+                  disabled
+                  title="Event details will be implemented in the next stage"
+                >
+                  View details
+                  <fa-icon [icon]="faArrowRight" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </section>
+
+      <p class="result-count">
+        You're all caught up. More campus events are on the way.
+      </p>
+    }
+  }
+</section>

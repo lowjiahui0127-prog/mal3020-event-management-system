@@ -1,1 +1,22 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --navy: #172b43;
+  --accent: #c94d26;
+  --bg: #f7f7f4;
+  --surface: #ffffff;
+  --border: #e5e7e5;
+  --muted: #687789;
+  --content-width: min(1240px, calc(100% - 48px));
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--navy);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}

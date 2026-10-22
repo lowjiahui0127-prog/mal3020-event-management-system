@@ -1,0 +1,61 @@
+.site-header {
+  background: var(--navy);
+  color: #fff;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: var(--content-width);
+  height: 64px;
+  margin: 0 auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--accent);
+}
+
+.brand-name {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.main-nav {
+  display: flex;
+  gap: 28px;
+  height: 100%;
+}
+
+.main-nav a {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  border-bottom: 3px solid transparent;
+  color: rgb(255 255 255 / 65%);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.main-nav a:hover {
+  color: #fff;
+}
+
+.main-nav a.active {
+  border-bottom-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}

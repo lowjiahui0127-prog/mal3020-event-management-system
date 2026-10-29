@@ -70,15 +70,13 @@
               </p>
 
               <div class="event-footer">
-                <button
-                  type="button"
+                <a
                   class="details-button"
-                  disabled
-                  title="Event details will be implemented in the next stage"
+                  [routerLink]="['/events', item._id]"
                 >
                   View details
                   <fa-icon [icon]="faArrowRight" aria-hidden="true" />
-                </button>
+                </a>
               </div>
             </div>
           </article>

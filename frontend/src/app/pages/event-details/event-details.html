@@ -1,0 +1,83 @@
+<section class="page">
+  <a class="back-link" routerLink="/events">
+    ← Back to all events
+  </a>
+
+  @if (loading()) {
+    <div class="message">
+      <p>Loading event details...</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="message error">
+      <h1>Unable to display event</h1>
+      <p>{{ errorMessage() }}</p>
+      <a class="primary-button" routerLink="/events">
+        Browse events
+      </a>
+    </div>
+  } @else if (event(); as item) {
+    <article class="event-details">
+      <div class="event-banner">
+        <span class="banner-label">EVENTHUB · CAMPUS EVENTS</span>
+        <div class="date-badge">
+          <span>{{ item.date | date: 'MMM' }}</span>
+          <strong>{{ item.date | date: 'dd' }}</strong>
+        </div>
+      </div>
+
+      <div class="event-body">
+        <p class="eyebrow">EVENT DETAILS</p>
+        <h1>{{ item.title }}</h1>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">DATE</span>
+            <strong>{{ item.date | date: 'EEEE, d MMMM y' }}</strong>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">TIME</span>
+            <strong>
+              {{ item.date | date: 'HH:mm' }}
+              @if (item.endDate) {
+                – {{ item.endDate | date: 'HH:mm' }}
+              }
+            </strong>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">LOCATION</span>
+            <strong>{{ item.location }}</strong>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">CAPACITY</span>
+            <strong>{{ item.capacity }} attendees</strong>
+          </div>
+        </div>
+
+        <div class="description">
+          <h2>About this event</h2>
+          <p>{{ item.description || 'No event description is available.' }}</p>
+        </div>
+
+        @if (item.status === 'published') {
+          <div class="registration-panel">
+            <div>
+              <h2>Interested in attending?</h2>
+              <p>Log in to continue to event registration.</p>
+            </div>
+
+            <a class="primary-button" routerLink="/login">
+              Log in to register
+            </a>
+          </div>
+        } @else {
+          <p class="status-message">
+            This event is not currently open for registration.
+          </p>
+        }
+      </div>
+    </article>
+  }
+</section>

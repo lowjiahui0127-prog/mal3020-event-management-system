@@ -224,11 +224,8 @@ h1 {
   font: inherit;
   font-size: 12px;
   font-weight: 700;
-}
-
-.details-button:disabled {
-  color: #a6abb1;
-  cursor: not-allowed;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .message,

@@ -8,10 +8,11 @@ import {
   faLocationDot,
   faArrowRight
 } from '@fortawesome/free-solid-svg-icons';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-event-list',
-  imports: [DatePipe, FontAwesomeModule],
+  imports: [DatePipe, FontAwesomeModule, RouterLink],
   templateUrl: './event-list.html',
   styleUrl: './event-list.css'
 })

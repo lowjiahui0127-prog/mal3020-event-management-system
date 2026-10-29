@@ -1,1 +1,127 @@
-<p>login works!</p>
+<section class="login-layout">
+  <aside class="brand-panel">
+    <a class="brand" routerLink="/events" aria-label="EventHub home">
+      <span class="brand-icon">
+        <fa-icon [icon]="faCalendarDays" aria-hidden="true" />
+      </span>
+      <span>EventHub</span>
+    </a>
+
+    <div class="brand-content">
+      <div class="campus-visual">
+        <img src="campus.png" alt="Campus community" class="campus-img" />
+      </div>
+
+      <h2>Your campus.<br />Your next experience.</h2>
+
+      <p>
+        A place to learn, connect, and bring good ideas to life.
+        Find what's happening in your campus community.
+      </p>
+    </div>
+
+    <p class="copyright">© 2026 EventHub</p>
+  </aside>
+
+  <main class="form-panel">
+    <a class="explore-link" routerLink="/events">
+      <span aria-hidden="true">←</span>
+      Explore Events
+    </a>
+
+    <div class="login-content">
+      <div class="intro">
+        <h1>Welcome back</h1>
+        <p>Log in to keep your campus plans together.</p>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="form-message" role="alert">
+          <strong>We couldn't log you in</strong>
+          <p>{{ errorMessage() }}</p>
+        </div>
+      }
+
+      <form (ngSubmit)="onSubmit()" #loginForm="ngForm" novalidate>
+        <div class="form-field">
+          <label for="email">Email address</label>
+
+          <input
+            id="email"
+            name="email"
+            type="email"
+            [(ngModel)]="email"
+            #emailInput="ngModel"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+            email
+            [class.invalid]="emailInput.invalid && emailInput.touched"
+          />
+
+          @if (emailInput.invalid && emailInput.touched) {
+            <small class="field-error">
+              @if (emailInput.errors?.['required']) {
+                Email address is required.
+              } @else if (emailInput.errors?.['email']) {
+                Enter a valid email address.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="password">Password</label>
+
+          <div class="password-wrapper">
+            <input
+              id="password"
+              name="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              [(ngModel)]="password"
+              #passwordInput="ngModel"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+              [class.invalid]="passwordInput.invalid && passwordInput.touched"
+            />
+
+            <button
+              class="password-toggle"
+              type="button"
+              (click)="showPassword.set(!showPassword())"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+              [attr.aria-pressed]="showPassword()"
+            >
+              <fa-icon
+                [icon]="showPassword() ? faEye : faEyeSlash"
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+
+          @if (passwordInput.invalid && passwordInput.touched) {
+            <small class="field-error">Enter your password.</small>
+          }
+        </div>
+
+        <button
+          class="submit-button"
+          type="submit"
+          [disabled]="loginForm.invalid"
+        >
+          Log in
+        </button>
+      </form>
+
+      <p class="register-prompt">
+        Don't have an account?
+        <a routerLink="/register">Create an account</a>
+      </p>
+    </div>
+
+    <p class="community-note">
+      Made for your campus community.
+    </p>
+  </main>
+</section>

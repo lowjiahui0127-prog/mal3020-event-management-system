@@ -1,5 +1,6 @@
-
 import { Routes } from '@angular/router';
+
+import { MainLayout } from './layout/main-layout/main-layout';
 
 import { EventList } from './pages/event-list/event-list';
 import { EventDetails } from './pages/event-details/event-details';
@@ -14,55 +15,66 @@ import { EditEvent } from './pages/edit-event/edit-event';
 import { EventRegistrations } from './pages/event-registrations/event-registrations';
 
 export const routes: Routes = [
-  {
-    path: '',
-    redirectTo: 'events',
-    pathMatch: 'full'
-  },
-  {
-    path: 'events',
-    component: EventList
-  },
-  {
-    path: 'events/:id',
-    component: EventDetails
-  },
-  {
-    path: 'register',
-    component: Register
-  },
+  // Authentication pages: independent layout
   {
     path: 'login',
     component: Login
   },
   {
-    path: 'my-registrations',
-    component: MyRegistrations
+    path: 'register',
+    component: Register
   },
+
+  // Main application pages: shared Header and Footer
   {
-    path: 'my-registrations/:id',
-    component: RegistrationDetails
+    path: '',
+    component: MainLayout,
+    children: [
+      {
+        path: '',
+        redirectTo: 'events',
+        pathMatch: 'full'
+      },
+      {
+        path: 'events',
+        component: EventList
+      },
+      {
+        path: 'events/:id',
+        component: EventDetails
+      },
+      {
+        path: 'my-registrations',
+        component: MyRegistrations
+      },
+      {
+        path: 'my-registrations/:id',
+        component: RegistrationDetails
+      },
+      {
+        path: 'organiser/dashboard',
+        component: OrganiserDashboard
+      },
+      {
+        path: 'organiser/events',
+        component: EventManagement
+      },
+      {
+        path: 'organiser/events/create',
+        component: CreateEvent
+      },
+      {
+        path: 'organiser/events/:id/edit',
+        component: EditEvent
+      },
+      {
+        path: 'organiser/events/:id/registrations',
+        component: EventRegistrations
+      }
+    ]
   },
-  {
-    path: 'organiser/dashboard',
-    component: OrganiserDashboard
-  },
-  {
-    path: 'organiser/events',
-    component: EventManagement
-  },
-  {
-    path: 'organiser/events/create',
-    component: CreateEvent
-  },
-  {
-    path: 'organiser/events/:id/edit',
-    component: EditEvent
-  },
-  {
-    path: 'organiser/events/:id/registrations',
-    component: EventRegistrations
-  },
+
+  // Unknown URLs redirect to the event listing
   {
     path: '**',
     redirectTo: 'events'

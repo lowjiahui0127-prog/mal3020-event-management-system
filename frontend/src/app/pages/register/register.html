@@ -1,1 +1,213 @@
-<p>register works!</p>
+<section class="register-layout">
+  <aside class="brand-panel">
+    <a class="brand" routerLink="/events" aria-label="EventHub home">
+      <span class="brand-icon">
+        <fa-icon [icon]="faCalendarDays" aria-hidden="true" />
+      </span>
+      <span>EventHub</span>
+    </a>
+
+    <div class="brand-content">
+      <div class="campus-visual">
+        <img src="campus.png" alt="Campus community" class="campus-img"/>
+      </div>
+
+      <h2>Make room for<br />new experiences.</h2>
+
+      <p>
+        Join your campus community, discover upcoming events,
+        and make every opportunity count.
+      </p>
+    </div>
+
+    <p class="copyright">© 2026 EventHub</p>
+  </aside>
+
+  <main class="form-panel">
+    <a class="explore-link" routerLink="/events">
+      <span aria-hidden="true">←</span>
+      Explore Events
+    </a>
+
+    <div class="register-content">
+      <div class="intro">
+        <h1>Create your account</h1>
+        <p>Get started with your campus community.</p>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="form-message" role="alert">
+          <strong>We couldn't create your account</strong>
+          <p>{{ errorMessage() }}</p>
+        </div>
+      }
+
+      @if (successMessage()) {
+        <div class="success-message" role="status">
+          {{ successMessage() }}
+        </div>
+      }
+
+      <form
+        (ngSubmit)="onSubmit()"
+        #registerForm="ngForm"
+        novalidate
+      >
+        <div class="form-field">
+          <label for="fullName">Full name</label>
+
+          <input
+            id="fullName"
+            name="fullName"
+            type="text"
+            [(ngModel)]="fullName"
+            #nameInput="ngModel"
+            placeholder="Enter your full name"
+            autocomplete="name"
+            required
+            maxlength="100"
+            [class.invalid]="nameInput.invalid && nameInput.touched"
+          />
+
+          @if (nameInput.invalid && nameInput.touched) {
+            <small class="field-error">
+              @if (nameInput.errors?.['required']) {
+                Full name is required.
+              } @else if (nameInput.errors?.['maxlength']) {
+                Name must be 100 characters or fewer.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="email">Email address</label>
+
+          <input
+            id="email"
+            name="email"
+            type="email"
+            [(ngModel)]="email"
+            #emailInput="ngModel"
+            placeholder="you@example.com"
+            autocomplete="email"
+            required
+            email
+            [class.invalid]="emailInput.invalid && emailInput.touched"
+          />
+
+          @if (emailInput.invalid && emailInput.touched) {
+            <small class="field-error">
+              @if (emailInput.errors?.['required']) {
+                Email address is required.
+              } @else if (emailInput.errors?.['email']) {
+                Enter a valid email address.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="password">Password</label>
+
+          <div class="password-wrapper">
+            <input
+              id="password"
+              name="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              [(ngModel)]="password"
+              #passwordInput="ngModel"
+              placeholder="At least 8 characters"
+              autocomplete="new-password"
+              required
+              minlength="8"
+              [class.invalid]="passwordInput.invalid && passwordInput.touched"
+            />
+
+            <button
+              class="password-toggle"
+              type="button"
+              (click)="showPassword.set(!showPassword())"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+              [attr.aria-pressed]="showPassword()"
+            >
+              <fa-icon
+                [icon]="showPassword() ? faEyeSlash : faEye"
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+
+          @if (passwordInput.invalid && passwordInput.touched) {
+            <small class="field-error">
+              @if (passwordInput.errors?.['required']) {
+                Password is required.
+              } @else if (passwordInput.errors?.['minlength']) {
+                Password must contain at least 8 characters.
+              }
+            </small>
+          }
+        </div>
+
+        <div class="form-field role-field">
+          <span class="field-label">I'm joining as an</span>
+
+          <div class="role-options">
+            <!-- Attendee Card -->
+            <button
+              type="button"
+              class="role-card"
+              [class.selected]="role === 'attendee'"
+              [attr.aria-pressed]="role === 'attendee'"
+              (click)="role = 'attendee'"
+            >
+              <div class="role-card-header">
+                <fa-icon [icon]="faUser" class="role-icon" />
+                <span class="radio-indicator"></span>
+              </div>
+              <span class="role-card-title">Attendee</span>
+              <span class="role-card-description">
+                Discover and join events
+              </span>
+            </button>
+
+            <!-- Organiser Card -->
+            <button
+              type="button"
+              class="role-card"
+              [class.selected]="role === 'organiser'"
+              [attr.aria-pressed]="role === 'organiser'"
+              (click)="role = 'organiser'"
+            >
+              <div class="role-card-header">
+                <fa-icon [icon]="faCalendarPlus" class="role-icon" />
+                <span class="radio-indicator"></span>
+              </div>
+              <span class="role-card-title">Organiser</span>
+              <span class="role-card-description">
+                Create and manage events
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <button
+          class="submit-button"
+          type="submit"
+          [disabled]="registerForm.invalid"
+        >
+          Create account
+        </button>
+      </form>
+
+      <p class="login-prompt">
+        Already have an account?
+        <a routerLink="/login">Log in</a>
+      </p>
+    </div>
+
+    <p class="community-note">
+      Made for your campus community.
+    </p>
+  </main>
+</section>

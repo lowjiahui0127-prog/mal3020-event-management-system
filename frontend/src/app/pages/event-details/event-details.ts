@@ -3,10 +3,17 @@ import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EventApi } from '../../services/event-api';
 import { EventItem } from '../../models/event.model';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import {
+  faCalendarDays,
+  faChevronRight,
+  faLocationDot,
+  faUserGroup
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-event-details',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, FontAwesomeModule],
   templateUrl: './event-details.html',
   styleUrl: './event-details.css'
 })
@@ -17,6 +24,10 @@ export class EventDetails implements OnInit {
   readonly event = signal<EventItem | null>(null);
   readonly loading = signal(true);
   readonly errorMessage = signal('');
+  readonly faCalendarDays = faCalendarDays;
+  readonly faChevronRight = faChevronRight;
+  readonly faLocationDot = faLocationDot;
+  readonly faUserGroup = faUserGroup;
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {

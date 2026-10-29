@@ -1,83 +1,67 @@
 <section class="page">
-  <a class="back-link" routerLink="/events">
-    ← Back to all events
-  </a>
-
   @if (loading()) {
-    <div class="message">
-      <p>Loading event details...</p>
-    </div>
+    <div class="message"><p>Loading event details...</p></div>
   } @else if (errorMessage()) {
     <div class="message error">
       <h1>Unable to display event</h1>
       <p>{{ errorMessage() }}</p>
-      <a class="primary-button" routerLink="/events">
-        Browse events
-      </a>
+      <a class="primary-button" routerLink="/events">Browse events</a>
     </div>
   } @else if (event(); as item) {
-    <article class="event-details">
-      <div class="event-banner">
-        <span class="banner-label">EVENTHUB · CAMPUS EVENTS</span>
-        <div class="date-badge">
-          <span>{{ item.date | date: 'MMM' }}</span>
-          <strong>{{ item.date | date: 'dd' }}</strong>
-        </div>
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/events">Explore Events</a>
+      <fa-icon [icon]="faChevronRight" aria-hidden="true" />
+      <span>{{ item.title }}</span>
+    </nav>
+
+    <div class="hero">
+      <div class="date-badge">
+        <span>{{ item.date | date: 'MMM' }}</span>
+        <strong>{{ item.date | date: 'dd' }}</strong>
       </div>
+      <span class="hero-label">EVENTHUB</span>
+    </div>
 
-      <div class="event-body">
-        <p class="eyebrow">EVENT DETAILS</p>
+    <div class="layout">
+      <article class="main">
         <h1>{{ item.title }}</h1>
+        <h2>About this event</h2>
+        <p class="description">
+          {{ item.description || 'No event description is available.' }}
+        </p>
+      </article>
 
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">DATE</span>
-            <strong>{{ item.date | date: 'EEEE, d MMMM y' }}</strong>
-          </div>
+      <aside class="join-card">
+        <h2>Join this event</h2>
 
-          <div class="info-item">
-            <span class="info-label">TIME</span>
-            <strong>
-              {{ item.date | date: 'HH:mm' }}
-              @if (item.endDate) {
-                – {{ item.endDate | date: 'HH:mm' }}
-              }
-            </strong>
-          </div>
-
-          <div class="info-item">
-            <span class="info-label">LOCATION</span>
-            <strong>{{ item.location }}</strong>
-          </div>
-
-          <div class="info-item">
-            <span class="info-label">CAPACITY</span>
-            <strong>{{ item.capacity }} attendees</strong>
-          </div>
-        </div>
-
-        <div class="description">
-          <h2>About this event</h2>
-          <p>{{ item.description || 'No event description is available.' }}</p>
-        </div>
+        <ul class="facts">
+          <li>
+            <fa-icon [icon]="faCalendarDays" aria-hidden="true" />
+            <div>
+              <strong>{{ item.date | date: 'EEEE, d MMMM y' }}</strong>
+              <span>
+                {{ item.date | date: 'HH:mm' }}@if (item.endDate) { – {{ item.endDate | date: 'HH:mm' }}}
+              </span>
+            </div>
+          </li>
+          <li>
+            <fa-icon [icon]="faLocationDot" aria-hidden="true" />
+            <div><strong>{{ item.location }}</strong></div>
+          </li>
+          <li>
+            <fa-icon [icon]="faUserGroup" aria-hidden="true" />
+            <div><strong>{{ item.capacity }}-person capacity</strong></div>
+          </li>
+        </ul>
 
         @if (item.status === 'published') {
-          <div class="registration-panel">
-            <div>
-              <h2>Interested in attending?</h2>
-              <p>Log in to continue to event registration.</p>
-            </div>
-
-            <a class="primary-button" routerLink="/login">
-              Log in to register
-            </a>
-          </div>
+          <a class="primary-button" routerLink="/login">Log in to register</a>
         } @else {
           <p class="status-message">
             This event is not currently open for registration.
           </p>
         }
-      </div>
-    </article>
+      </aside>
+    </div>
   }
 </section>

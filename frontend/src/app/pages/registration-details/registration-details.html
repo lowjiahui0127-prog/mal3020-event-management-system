@@ -1,1 +1,53 @@
-<p>registration-details works!</p>
+<section class="details-page">
+  <a class="back-link" routerLink="/my-registrations">
+    <fa-icon [icon]="faArrowLeft"></fa-icon>
+    Back to My Registrations
+  </a>
+
+  <header class="page-header">
+    <p class="eyebrow">YOUR ACTIVITY</p>
+    <h1>Registration Details</h1>
+    <p class="subtitle">
+      View your registration information and event details in one place.
+    </p>
+  </header>
+
+  <section class="details-card">
+    <div class="details-card-header">
+      <div class="ticket-icon">
+        <fa-icon [icon]="faTicket"></fa-icon>
+      </div>
+
+      <div>
+        <h2>Registration information</h2>
+        <p>Details about your event registration.</p>
+      </div>
+    </div>
+
+    <div class="details-divider"></div>
+
+    <div class="unavailable-state">
+      <div class="info-icon">
+        <fa-icon [icon]="faCircleInfo"></fa-icon>
+      </div>
+
+      <h3>Registration details are not available yet</h3>
+
+      <p>
+        This page is ready, but registration data has not been connected
+        to the backend yet. Once registration services are implemented,
+        your event details and registration status will appear here.
+      </p>
+
+      <a class="primary-button" routerLink="/events">
+        Explore Events
+        <fa-icon [icon]="faArrowLeft" class="forward-icon"></fa-icon>
+      </a>
+    </div>
+  </section>
+
+  <p class="help-text">
+    Looking for your other registrations?
+    <a routerLink="/my-registrations">Return to My Registrations</a>
+  </p>
+</section>

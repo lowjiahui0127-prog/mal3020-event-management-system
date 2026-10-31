@@ -12,7 +12,7 @@
   } @else if (errorMessage()) {
     <div class="message error">
       <p>{{ errorMessage() }}</p>
-      <button type="button" (click)="loadEvents()">Try again</button>
+      <button type="button" class="btn btn--ghost" (click)="loadEvents()">Try again</button>
     </div>
   } @else if (events().length === 0) {
     <div class="empty-state">
@@ -41,8 +41,8 @@
       </div>
     } @else {
       <section class="event-grid" aria-label="Available events">
-        @for (item of filteredEvents(); track item._id) {
-          <article class="event-card">
+        @for (item of filteredEvents(); track item._id; let i = $index) {
+          <article class="event-card reveal" [style.--i]="i">
             <div class="event-image">
               <div class="date-badge">
                 <span>{{ item.date | date: 'MMM' }}</span>

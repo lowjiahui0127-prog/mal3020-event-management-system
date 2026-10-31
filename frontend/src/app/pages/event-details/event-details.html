@@ -14,7 +14,7 @@
       <span>{{ item.title }}</span>
     </nav>
 
-    <div class="hero">
+    <div class="hero reveal" [style.--i]="0">
       <div class="date-badge">
         <span>{{ item.date | date: 'MMM' }}</span>
         <strong>{{ item.date | date: 'dd' }}</strong>
@@ -23,7 +23,7 @@
     </div>
 
     <div class="layout">
-      <article class="main">
+      <article class="main reveal" [style.--i]="1">
         <h1>{{ item.title }}</h1>
         <h2>About this event</h2>
         <p class="description">
@@ -31,13 +31,14 @@
         </p>
       </article>
 
-      <aside class="join-card">
+      <aside class="join-card reveal" [style.--i]="2">
         <h2>Join this event</h2>
 
         <ul class="facts">
           <li>
             <fa-icon [icon]="faCalendarDays" aria-hidden="true" />
             <div>
+              <small class="fact-label">Date</small>
               <strong>{{ item.date | date: 'EEEE, d MMMM y' }}</strong>
               <span>
                 {{ item.date | date: 'HH:mm' }}@if (item.endDate) { – {{ item.endDate | date: 'HH:mm' }}}
@@ -46,16 +47,28 @@
           </li>
           <li>
             <fa-icon [icon]="faLocationDot" aria-hidden="true" />
-            <div><strong>{{ item.location }}</strong></div>
+            <div>
+              <small class="fact-label">Location</small>
+              <strong>{{ item.location }}</strong>
+            </div>
           </li>
           <li>
             <fa-icon [icon]="faUserGroup" aria-hidden="true" />
-            <div><strong>{{ item.capacity }}-person capacity</strong></div>
+            <div>
+              <small class="fact-label">Capacity</small>
+              <strong>{{ item.capacity }} people</strong>
+            </div>
           </li>
         </ul>
 
         @if (item.status === 'published') {
-          <a class="primary-button" routerLink="/login">Log in to register</a>
+          <a
+            class="primary-button"
+            routerLink="/login"
+            [queryParams]="{ returnUrl: '/events/' + item._id }"
+          >
+            Log in to register
+          </a>
         } @else {
           <p class="status-message">
             This event is not currently open for registration.

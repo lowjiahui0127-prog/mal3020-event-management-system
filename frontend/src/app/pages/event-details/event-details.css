@@ -3,202 +3,264 @@
 }
 
 .page {
-  width: min(1240px, calc(100% - 48px));
+  width: var(--content-width);
   margin: 0 auto;
-  padding: 28px 0 64px;
+  padding: 32px 0 48px;
 }
 
+/* ---------- Breadcrumb ---------- */
 .breadcrumb {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 20px;
-  color: var(--muted);
-  font-size: 13px;
+  color: var(--muted-ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .breadcrumb a {
-  color: var(--muted);
+  color: var(--muted-ink);
   text-decoration: none;
+  transition: color .2s var(--ease);
 }
 
 .breadcrumb a:hover {
-  color: var(--accent);
+  color: var(--ink);
 }
 
 .breadcrumb fa-icon {
-  font-size: 10px;
+  font-size: 9px;
 }
 
 .breadcrumb span {
-  color: var(--navy);
-  font-weight: 500;
+  color: var(--ink);
 }
 
+/* ---------- Hero: same hatch placeholder as the cards ---------- */
 .hero {
   position: relative;
   display: grid;
-  min-height: 240px;
+  min-height: 260px;
   place-items: center;
-  border-radius: 14px;
-  background:
-    radial-gradient(circle at 80% 20%, rgb(255 255 255 / 14%), transparent 30%),
-    linear-gradient(135deg, #203c59, #405b70);
+  border: 1px solid var(--ink);
+  background-color: var(--white);
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 9px,
+    var(--line-soft) 9px 10px
+  );
   overflow: hidden;
 }
 
 .hero-label {
-  color: rgb(255 255 255 / 70%);
+  color: var(--muted-ink);
+  font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 3px;
+  letter-spacing: 0.2em;
 }
 
 .date-badge {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 0;
+  left: 0;
   display: flex;
-  width: 56px;
-  min-height: 64px;
+  min-width: 64px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
-  z-index: 2;
+  padding: 10px 12px;
+  border-right: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper);
 }
 
 .date-badge span {
-  color: var(--accent, #c94d26);
+  font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .date-badge strong {
-  margin-top: 1px;
-  color: var(--navy, #172b43);
-  font-size: 24px;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 500;
   line-height: 1.1;
 }
 
+/* ---------- Layout ---------- */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   align-items: start;
-  gap: 40px;
-  margin-top: 32px;
+  gap: 48px;
+  margin-top: 40px;
 }
 
 .main h1 {
-  margin: 0 0 24px;
-  font-size: clamp(28px, 4vw, 38px);
-  line-height: 1.25;
+  margin: 0 0 40px;
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
   overflow-wrap: anywhere;
 }
 
+/* Section label: mono + top rule */
 .main h2 {
-  margin: 0 0 12px;
-  font-size: 20px;
+  margin: 0 0 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ink);
+  color: var(--muted-ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .description {
+  max-width: 62ch;
   margin: 0;
-  color: #4a5b6e;
-  font-size: 15px;
+  color: var(--ink);
+  font-size: 16px;
   line-height: 1.8;
   overflow-wrap: anywhere;
   white-space: pre-line;
 }
 
+/* ---------- Join card: flat box, no shadow ---------- */
 .join-card {
   position: sticky;
-  top: 88px;
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 4px 18px rgb(23 43 67 / 5%);
+  top: 84px;
+  border: 1px solid var(--ink);
+  background: var(--white);
 }
 
 .join-card h2 {
-  margin: 0 0 20px;
+  margin: 0;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--ink);
   font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
 .facts {
   display: flex;
   flex-direction: column;
-  gap: 18px;
   margin: 0 0 24px;
-  padding: 0;
+  padding: 0 24px;
   list-style: none;
 }
 
 .facts li {
   display: flex;
   gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.facts li:last-child {
+  border-bottom: 0;
 }
 
 .facts fa-icon {
   width: 18px;
-  margin-top: 2px;
-  color: var(--navy);
+  margin-top: 18px;
+  color: var(--ink);
+}
+
+.fact-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted-ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .facts strong {
   display: block;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
 }
 
 .facts span {
   display: block;
   margin-top: 2px;
-  color: var(--muted);
+  color: var(--muted-ink);
+  font-family: var(--font-mono);
   font-size: 12px;
 }
 
+/* ---------- Buttons ---------- */
 .primary-button {
   display: flex;
   width: 100%;
-  box-sizing: border-box;
   align-items: center;
   justify-content: center;
-  border: 0;
-  border-radius: 8px;
-  padding: 13px 18px;
-  background: var(--accent);
-  color: #fff;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  background: var(--ink);
+  color: var(--paper);
   font: inherit;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   text-decoration: none;
   cursor: pointer;
+  transition: background .2s var(--ease), color .2s var(--ease);
 }
 
 .primary-button:hover {
-  filter: brightness(0.94);
+  background: var(--lime);
+  color: var(--ink);
 }
 
+.primary-button:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+}
+
+.join-card > .primary-button {
+  width: calc(100% - 48px);
+  margin: 0 24px 24px;
+}
+
+.status-message {
+  margin: 0;
+  padding: 0 24px 24px;
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Loading / error ---------- */
 .message {
   padding: 28px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
-  color: var(--muted);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--white);
+  color: var(--muted-ink);
 }
 
 .message.error {
-  color: #a33820;
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 .message h1 {
-  color: var(--navy);
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
 }
 
 .message .primary-button {
@@ -206,12 +268,7 @@
   margin-top: 12px;
 }
 
-.status-message {
-  margin: 0;
-  color: #a33820;
-  font-size: 13px;
-}
-
+/* ---------- Responsive ---------- */
 @media (max-width: 860px) {
   .page {
     width: calc(100% - 28px);
@@ -219,7 +276,8 @@
 
   .layout {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 32px;
+    margin-top: 32px;
   }
 
   .join-card {
@@ -228,5 +286,9 @@
 
   .hero {
     min-height: 180px;
+  }
+
+  .main h1 {
+    margin-bottom: 28px;
   }
 }

@@ -1,5 +1,6 @@
 .site-footer {
-  border-top: 1px solid var(--border);
+  margin-top: 48px;
+  border-top: 1px solid var(--ink);
 }
 
 .footer-inner {
@@ -10,6 +11,9 @@
   width: var(--content-width);
   margin: 0 auto;
   padding: 24px 0;
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--muted-ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }

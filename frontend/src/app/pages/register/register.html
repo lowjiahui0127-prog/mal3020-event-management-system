@@ -149,48 +149,6 @@
           }
         </div>
 
-        <div class="form-field role-field">
-          <span class="field-label">I'm joining as an</span>
-
-          <div class="role-options">
-            <!-- Attendee Card -->
-            <button
-              type="button"
-              class="role-card"
-              [class.selected]="role === 'attendee'"
-              [attr.aria-pressed]="role === 'attendee'"
-              (click)="role = 'attendee'"
-            >
-              <div class="role-card-header">
-                <fa-icon [icon]="faUser" class="role-icon" />
-                <span class="radio-indicator"></span>
-              </div>
-              <span class="role-card-title">Attendee</span>
-              <span class="role-card-description">
-                Discover and join events
-              </span>
-            </button>
-
-            <!-- Organiser Card -->
-            <button
-              type="button"
-              class="role-card"
-              [class.selected]="role === 'organiser'"
-              [attr.aria-pressed]="role === 'organiser'"
-              (click)="role = 'organiser'"
-            >
-              <div class="role-card-header">
-                <fa-icon [icon]="faCalendarPlus" class="role-icon" />
-                <span class="radio-indicator"></span>
-              </div>
-              <span class="role-card-title">Organiser</span>
-              <span class="role-card-description">
-                Create and manage events
-              </span>
-            </button>
-          </div>
-        </div>
-
         <button
           class="submit-button"
           type="submit"

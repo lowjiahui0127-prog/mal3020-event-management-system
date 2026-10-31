@@ -5,12 +5,8 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
   faCalendarDays,
   faEye,
-  faEyeSlash,
-  faUser,
-  faCalendarPlus
+  faEyeSlash
 } from '@fortawesome/free-solid-svg-icons';
-
-export type UserRole = 'attendee' | 'organiser';
 
 @Component({
   selector: 'app-register',
@@ -22,21 +18,14 @@ export class Register {
   readonly faCalendarDays = faCalendarDays;
   readonly faEye = faEye;
   readonly faEyeSlash = faEyeSlash;
-  readonly faUser = faUser;
-  readonly faCalendarPlus = faCalendarPlus;
 
   fullName = '';
   email = '';
   password = '';
-  role: UserRole = 'attendee';
 
   readonly showPassword = signal(false);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
-
-  selectRole(selectedRole: UserRole): void {
-    this.role = selectedRole;
-  }
 
   onSubmit(): void {
     this.errorMessage.set('');
@@ -54,7 +43,7 @@ export class Register {
       return;
     }
 
-    // TODO: Connect to backend registration API with this.role included
+    // TODO: Connect to backend registration API
     this.errorMessage.set(
       'Account registration is not connected yet. Please try again later.'
     );

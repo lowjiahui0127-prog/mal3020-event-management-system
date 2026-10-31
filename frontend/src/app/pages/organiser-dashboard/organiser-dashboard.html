@@ -1,1 +1,231 @@
-<p>organiser-dashboard works!</p>
+<section class="dashboard-page">
+
+  <!-- Page Heading -->
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">EVENT MANAGEMENT</p>
+      <h1>Organiser Dashboard</h1>
+      <p class="page-description">
+        Manage your events and keep track of their performance.
+      </p>
+    </div>
+
+    <a class="create-button" routerLink="/organiser/events/create">
+      <fa-icon [icon]="faPlus"></fa-icon>
+      Create Event
+    </a>
+  </header>
+
+  <!-- Overview Statistics -->
+  <section class="overview-section">
+    <div class="section-heading">
+      <h2>Overview</h2>
+      <p>A quick look at your event activity.</p>
+    </div>
+
+    <div class="stats-grid">
+
+      <!-- Total Events -->
+      <article class="stat-card">
+        <div class="stat-icon navy-icon">
+          <fa-icon [icon]="faCalendarDays"></fa-icon>
+        </div>
+
+        <div class="stat-content">
+          <p>Total Events</p>
+          <h3>{{ isLoading() ? '—' : totalEvents() }}</h3>
+          <span>Events in the system</span>
+        </div>
+      </article>
+
+      <!-- Published Events -->
+      <article class="stat-card">
+        <div class="stat-icon green-icon">
+          <fa-icon [icon]="faCheckCircle"></fa-icon>
+        </div>
+
+        <div class="stat-content">
+          <p>Published Events</p>
+          <h3>{{ isLoading() ? '—' : publishedEvents() }}</h3>
+          <span>Currently published</span>
+        </div>
+      </article>
+
+      <!-- Total Registrations -->
+      <article class="stat-card">
+        <div class="stat-icon orange-icon">
+          <fa-icon [icon]="faUsers"></fa-icon>
+        </div>
+
+        <div class="stat-content">
+          <p>Total Registrations</p>
+
+          @if (totalRegistrations() === null) {
+            <h3>—</h3>
+            <span>Registration data unavailable</span>
+          } @else {
+            <h3>{{ totalRegistrations() }}</h3>
+            <span>Across your events</span>
+          }
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- Your Events -->
+  <section class="events-section">
+
+    <div class="events-heading">
+      <div>
+        <h2>Your Events</h2>
+        <p>View and manage your event listings.</p>
+      </div>
+
+      <a class="view-all-link" routerLink="/organiser/events">
+        View all events
+        <fa-icon [icon]="faArrowRight"></fa-icon>
+      </a>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="table-container">
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <p>Loading your events...</p>
+        </div>
+      </div>
+    }
+
+    <!-- Error State -->
+    @else if (errorMessage()) {
+      <div class="table-container">
+        <div class="message-state">
+          <div class="message-icon error-icon">
+            <fa-icon [icon]="faRotateRight"></fa-icon>
+          </div>
+
+          <h3>Unable to load events</h3>
+          <p>{{ errorMessage() }}</p>
+
+          <button class="retry-button" type="button" (click)="loadEvents()">
+            Try again
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @else if (events().length === 0) {
+      <div class="table-container">
+        <div class="message-state">
+          <div class="message-icon empty-icon">
+            <fa-icon [icon]="faCalendarXmark"></fa-icon>
+          </div>
+
+          <h3>No events created yet</h3>
+          <p>
+            Start organising your first event and it will appear here.
+          </p>
+
+          <a class="create-button" routerLink="/organiser/events/create">
+            <fa-icon [icon]="faPlus"></fa-icon>
+            Create your first event
+          </a>
+        </div>
+      </div>
+    }
+
+    <!-- Events Table -->
+    @else {
+      <div class="table-container">
+        <table class="events-table">
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Date</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (event of events(); track event._id) {
+              <tr>
+                <td>
+                  <div class="event-name-cell">
+                    <div class="small-event-icon">
+                      <fa-icon [icon]="faCalendarDays"></fa-icon>
+                    </div>
+
+                    <div class="event-name-content">
+                      <span class="event-name">{{ event.title }}</span>
+                      <span class="event-id">ID: {{ event._id }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <td>
+                  <span class="table-date">
+                    {{ event.date | date: 'd MMM yyyy' }}
+                  </span>
+                  <span class="table-time">
+                    {{ event.date | date: 'h:mm a' }}
+                  </span>
+                </td>
+
+                <td>
+                  <span class="table-location">
+                    <fa-icon [icon]="faLocationDot"></fa-icon>
+                    {{ event.location }}
+                  </span>
+                </td>
+
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.published]="event.status === 'published'"
+                    [class.draft]="event.status === 'draft'"
+                    [class.cancelled]="event.status === 'cancelled'"
+                  >
+                    {{ event.status | titlecase }}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="action-links">
+                    <a
+                      class="action-link edit-link"
+                      [routerLink]="['/organiser/events', event._id, 'edit']"
+                      title="Edit event"
+                      aria-label="Edit event"
+                    >
+                      <fa-icon [icon]="faPenToSquare"></fa-icon>
+                    </a>
+
+                    <a
+                      class="action-link registrations-link"
+                      [routerLink]="[
+                        '/organiser/events',
+                        event._id,
+                        'registrations'
+                      ]"
+                      title="View registrations"
+                      aria-label="View registrations"
+                    >
+                      <fa-icon [icon]="faClipboardList"></fa-icon>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  </section>
+
+</section>

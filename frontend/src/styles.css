@@ -1,4 +1,20 @@
 :root {
+  /* ===== New design tokens ===== */
+  --ink: #0e0e0e;
+  --paper: #f4f4f1;
+  --white: #ffffff;
+  --line-soft: #d9d9d3;
+  --lime: #d7ff3a;
+  --danger: #c2310f;
+  --muted-ink: #6b6b66;
+
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+
+  --radius: 2px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+
+  /* ===== Legacy tokens (other pages still use these; delete when all pages are redone) ===== */
   --navy: #172b43;
   --accent: #c94d26;
   --bg: #f7f7f4;
@@ -16,7 +32,56 @@
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--navy);
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Monospaced label: dates, locations, counts, status */
+.label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-ink);
+}
+
+/* Buttons: square, flat, no shadow */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 14px var(--font-sans);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .2s var(--ease), color .2s var(--ease);
+}
+.btn:hover { background: var(--lime); color: var(--ink); }
+.btn--ghost { background: transparent; color: var(--ink); }
+.btn--ghost:hover { background: var(--ink); color: var(--paper); }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* Motion: staggered entrance. Set --i from the template. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+.reveal {
+  animation: rise .5s var(--ease) both;
+  animation-delay: calc(min(var(--i, 0), 8) * 60ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

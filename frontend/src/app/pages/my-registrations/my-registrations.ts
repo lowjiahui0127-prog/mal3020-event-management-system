@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, TitleCasePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
   FontAwesomeModule
@@ -24,7 +24,7 @@ interface RegistrationView {
 
 @Component({
   selector: 'app-my-registrations',
-  imports: [DatePipe, RouterLink, FontAwesomeModule],
+  imports: [DatePipe, TitleCasePipe, RouterLink, FontAwesomeModule],
   templateUrl: './my-registrations.html',
   styleUrl: './my-registrations.css',
 })

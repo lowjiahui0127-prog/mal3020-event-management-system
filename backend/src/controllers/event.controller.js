@@ -65,6 +65,17 @@ function handleError(res, error, fallbackMessage) {
   });
 }
 
+function isOwner(event, user) {
+  return Boolean(event.createdBy && event.createdBy.equals(user._id));
+}
+
+function forbidden(res) {
+  return res.status(403).json({
+    success: false,
+    message: 'You can only manage your own events'
+  });
+}
+
 // GET /api/events
 exports.getEvents = async (req, res) => {
   try {
@@ -88,6 +99,23 @@ exports.getEvents = async (req, res) => {
     });
   } catch (error) {
     return handleError(res, error, 'Failed to fetch events');
+  }
+};
+
+// GET /api/events/mine (organiser only)
+exports.getMyEvents = async (req, res) => {
+  try {
+    const events = await Event.find({ createdBy: req.user._id }).sort({
+      date: 1
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: events.length,
+      data: events
+    });
+  } catch (error) {
+    return handleError(res, error, 'Failed to fetch your events');
   }
 };
 
@@ -121,7 +149,7 @@ exports.getEventById = async (req, res) => {
   }
 };
 
-// POST /api/events
+// POST /api/events (organiser only)
 exports.createEvent = async (req, res) => {
   try {
     const data = pickAllowedFields(req.body);
@@ -134,7 +162,10 @@ exports.createEvent = async (req, res) => {
       });
     }
 
-    const event = await Event.create(data);
+    const event = await Event.create({
+      ...data,
+      createdBy: req.user._id
+    });
 
     return res.status(201).json({
       success: true,
@@ -145,7 +176,7 @@ exports.createEvent = async (req, res) => {
   }
 };
 
-// PUT /api/events/:id
+// PUT /api/events/:id (owner only)
 exports.updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -164,6 +195,10 @@ exports.updateEvent = async (req, res) => {
         success: false,
         message: 'Event not found'
       });
+    }
+
+    if (!isOwner(existingEvent, req.user)) {
+      return forbidden(res);
     }
 
     const updates = pickAllowedFields(req.body);
@@ -194,7 +229,7 @@ exports.updateEvent = async (req, res) => {
   }
 };
 
-// DELETE /api/events/:id
+// DELETE /api/events/:id (owner only)
 exports.deleteEvent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -206,7 +241,7 @@ exports.deleteEvent = async (req, res) => {
       });
     }
 
-    const event = await Event.findByIdAndDelete(id);
+    const event = await Event.findById(id);
 
     if (!event) {
       return res.status(404).json({
@@ -214,6 +249,12 @@ exports.deleteEvent = async (req, res) => {
         message: 'Event not found'
       });
     }
+
+    if (!isOwner(event, req.user)) {
+      return forbidden(res);
+    }
+
+    await event.deleteOne();
 
     return res.status(200).json({
       success: true,

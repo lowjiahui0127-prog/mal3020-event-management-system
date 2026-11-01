@@ -7,10 +7,12 @@
   color: var(--ink);
 }
 
+/* brand left | nav centered | account right */
 .header-inner {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 40px;
+  gap: 24px;
   width: var(--content-width);
   height: 60px;
   margin: 0 auto;
@@ -20,6 +22,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  width: fit-content;
   color: var(--ink);
   text-decoration: none;
 }
@@ -42,27 +45,35 @@
   text-transform: uppercase;
 }
 
+/* ---------- Centered navigation ---------- */
 .main-nav {
   display: flex;
   gap: 4px;
-  margin-left: auto;
 }
 
-.main-nav a {
+.main-nav a,
+.auth-link,
+.logout {
   display: flex;
   align-items: center;
   padding: 6px 12px;
+  border: 0;
   border-radius: var(--radius);
+  background: transparent;
   color: var(--muted-ink);
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
   transition: background .2s var(--ease), color .2s var(--ease);
 }
 
-.main-nav a:hover {
+.main-nav a:hover,
+.auth-link:hover,
+.logout:hover {
   color: var(--ink);
 }
 
@@ -71,7 +82,94 @@
   color: var(--ink);
 }
 
-@media (max-width: 600px) {
-  .header-inner { gap: 16px; }
-  .main-nav a { padding: 6px 8px; font-size: 11px; }
+/* ---------- Account area ---------- */
+.account {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.account-name {
+  max-width: 140px;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-role {
+  padding: 2px 6px;
+  border: 1px solid var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--lime);
+}
+
+.account-role.is-organiser {
+  background: var(--ink);
+  color: var(--lime);
+}
+
+.logout {
+  border: 1px solid var(--ink);
+  color: var(--ink);
+}
+
+.logout:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.auth-button {
+  padding: 8px 14px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background .2s var(--ease), color .2s var(--ease);
+}
+
+.auth-button:hover {
+  background: var(--lime);
+  color: var(--ink);
+}
+
+/* ---------- Narrow screens: nav drops to its own row ---------- */
+@media (max-width: 860px) {
+  .header-inner {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      'brand account'
+      'nav nav';
+    gap: 8px 16px;
+    height: auto;
+    padding: 10px 0;
+  }
+
+  .brand { grid-area: brand; }
+  .account { grid-area: account; }
+
+  .main-nav {
+    grid-area: nav;
+    overflow-x: auto;
+  }
+
+  .main-nav a {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .account-name {
+    display: none;
+  }
 }

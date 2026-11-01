@@ -94,7 +94,7 @@
               [attr.aria-pressed]="showPassword()"
             >
               <fa-icon
-                [icon]="showPassword() ? faEye : faEyeSlash"
+                [icon]="showPassword() ? faEyeSlash : faEye"
                 aria-hidden="true"
               />
             </button>
@@ -108,15 +108,15 @@
         <button
           class="submit-button"
           type="submit"
-          [disabled]="loginForm.invalid"
+          [disabled]="loginForm.invalid || submitting()"
         >
-          Log in
+          {{ submitting() ? 'Logging in...' : 'Log in' }}
         </button>
       </form>
 
       <p class="register-prompt">
         Don't have an account?
-        <a routerLink="/register">Create an account</a>
+        <a routerLink="/register" queryParamsHandling="preserve">Create an account</a>
       </p>
     </div>
 

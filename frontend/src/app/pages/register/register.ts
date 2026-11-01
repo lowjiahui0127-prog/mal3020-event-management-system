@@ -1,12 +1,16 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
   faCalendarDays,
   faEye,
   faEyeSlash
 } from '@fortawesome/free-solid-svg-icons';
+import { switchMap, tap } from 'rxjs';
+
+import { AuthService } from '../../services/auth.service';
+import { getErrorMessage } from '../../utils/http-error';
 
 @Component({
   selector: 'app-register',
@@ -15,6 +19,9 @@ import {
   styleUrl: './register.css'
 })
 export class Register {
+  private readonly auth = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
+
   readonly faCalendarDays = faCalendarDays;
   readonly faEye = faEye;
   readonly faEyeSlash = faEyeSlash;
@@ -24,10 +31,15 @@ export class Register {
   password = '';
 
   readonly showPassword = signal(false);
+  readonly submitting = signal(false);
   readonly errorMessage = signal('');
   readonly successMessage = signal('');
 
   onSubmit(): void {
+    if (this.submitting()) {
+      return;
+    }
+
     this.errorMessage.set('');
     this.successMessage.set('');
 
@@ -37,15 +49,35 @@ export class Register {
     }
 
     if (this.password.length < 8) {
-      this.errorMessage.set(
-        'Your password must contain at least 8 characters.'
-      );
+      this.errorMessage.set('Your password must contain at least 8 characters.');
       return;
     }
 
-    // TODO: Connect to backend registration API
-    this.errorMessage.set(
-      'Account registration is not connected yet. Please try again later.'
-    );
+    const email = this.email.trim();
+    const password = this.password;
+
+    this.submitting.set(true);
+
+    // The role is never sent: the server always creates an attendee.
+    this.auth
+      .register(this.fullName.trim(), email, password)
+      .pipe(
+        tap(() => this.successMessage.set('Account created. Signing you in...')),
+        switchMap(() => this.auth.login(email, password))
+      )
+      .subscribe({
+        next: () => {
+          this.auth.redirectAfterLogin(
+            this.route.snapshot.queryParamMap.get('returnUrl')
+          );
+        },
+        error: (error: unknown) => {
+          this.submitting.set(false);
+          this.successMessage.set('');
+          this.errorMessage.set(
+            getErrorMessage(error, 'Unable to create your account. Please try again.')
+          );
+        }
+      });
   }
 }

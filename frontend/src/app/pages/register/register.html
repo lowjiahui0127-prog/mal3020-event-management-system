@@ -152,15 +152,15 @@
         <button
           class="submit-button"
           type="submit"
-          [disabled]="registerForm.invalid"
+          [disabled]="registerForm.invalid || submitting()"
         >
-          Create account
+          {{ submitting() ? 'Creating account...' : 'Create account' }}
         </button>
       </form>
 
       <p class="login-prompt">
         Already have an account?
-        <a routerLink="/login">Log in</a>
+        <a routerLink="/login" queryParamsHandling="preserve">Log in</a>
       </p>
     </div>
 

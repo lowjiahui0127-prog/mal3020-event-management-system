@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Event = require('../models/event.model');
+const Registration = require('../models/registration.model');
 
 const ALLOWED_FIELDS = [
   'title',
@@ -203,6 +204,17 @@ exports.updateEvent = async (req, res) => {
 
     const updates = pickAllowedFields(req.body);
 
+    // Capacity can never drop below the number of people already registered
+    if (
+      updates.capacity !== undefined &&
+      Number(updates.capacity) < (existingEvent.registeredCount || 0)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: `Capacity cannot be lower than the ${existingEvent.registeredCount} attendees already registered`
+      });
+    }
+
     const mergedData = {
       date: updates.date ?? existingEvent.date,
       endDate: updates.endDate ?? existingEvent.endDate
@@ -254,6 +266,8 @@ exports.deleteEvent = async (req, res) => {
       return forbidden(res);
     }
 
+    // Remove the event's registrations too, so none are left pointing at nothing
+    await Registration.deleteMany({ event: event._id });
     await event.deleteOne();
 
     return res.status(200).json({

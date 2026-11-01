@@ -49,6 +49,13 @@ const eventSchema = new mongoose.Schema(
       default: 'published'
     },
 
+    // Number of confirmed registrations. Only the server changes this.
+    registeredCount: {
+      type: Number,
+      default: 0,
+      min: [0, 'Registered count cannot be negative']
+    },
+
     // The organiser who owns this event
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

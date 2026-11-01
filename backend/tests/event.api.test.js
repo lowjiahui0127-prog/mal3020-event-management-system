@@ -1,9 +1,12 @@
-require('dotenv').config();
-
 const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../src/app');
 const Event = require('../src/models/event.model');
+const User = require('../src/models/user.model');
+const { signToken } = require('../src/utils/token');
+const { connectTestDb } = require('./helpers/db');
+
+const TEST_EMAILS = { $regex: '@event-test\\.eventhub$' };
 
 const validEvent = {
   title: 'Docker Workshop',
@@ -15,26 +18,49 @@ const validEvent = {
   status: 'published'
 };
 
+let organiser;
+let otherOrganiser;
+let attendee;
+let organiserToken;
+let otherOrganiserToken;
+let attendeeToken;
+
+const bearer = (token) => ({ Authorization: `Bearer ${token}` });
+
+// An event owned by the main test organiser
+const createEvent = (overrides = {}) =>
+  Event.create({ ...validEvent, createdBy: organiser._id, ...overrides });
+
 beforeAll(async () => {
-  const uri = process.env.MONGO_URI_TEST;
+  process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
+  await connectTestDb();
 
-  if (!uri) {
-    throw new Error('MONGO_URI_TEST is not configured');
-  }
+  await User.deleteMany({ email: TEST_EMAILS });
 
-  const databaseName = new URL(uri).pathname.slice(1);
+  [organiser, otherOrganiser, attendee] = await User.create([
+    {
+      name: 'Organiser One',
+      email: 'org1@event-test.eventhub',
+      password: 'password123',
+      role: 'organiser'
+    },
+    {
+      name: 'Organiser Two',
+      email: 'org2@event-test.eventhub',
+      password: 'password123',
+      role: 'organiser'
+    },
+    {
+      name: 'Attendee One',
+      email: 'att1@event-test.eventhub',
+      password: 'password123',
+      role: 'attendee'
+    }
+  ]);
 
-  if (databaseName !== 'eventdb_test') {
-    throw new Error(
-      'Integration tests must use the eventdb_test database'
-    );
-  }
-
-  await mongoose.connect(uri, {
-    serverSelectionTimeoutMS: 10000,
-    // Jest cannot run the driver's dynamic import('os'), so provide it directly
-    runtimeAdapters: { os: require('os') }
-  });
+  organiserToken = signToken(organiser);
+  otherOrganiserToken = signToken(otherOrganiser);
+  attendeeToken = signToken(attendee);
 }, 30000);
 
 afterEach(async () => {
@@ -42,6 +68,7 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+  await User.deleteMany({ email: TEST_EMAILS });
   await mongoose.disconnect();
 });
 
@@ -49,6 +76,7 @@ describe('POST /api/events', () => {
   it('creates an event with valid data', async () => {
     const res = await request(app)
       .post('/api/events')
+      .set(bearer(organiserToken))
       .send(validEvent);
 
     expect(res.statusCode).toBe(201);
@@ -57,11 +85,22 @@ describe('POST /api/events', () => {
     expect(res.body.data.status).toBe('published');
   });
 
+  it('sets createdBy to the logged-in organiser and ignores a spoofed value', async () => {
+    const res = await request(app)
+      .post('/api/events')
+      .set(bearer(organiserToken))
+      .send({ ...validEvent, createdBy: otherOrganiser._id });
+
+    expect(res.statusCode).toBe(201);
+    expect(String(res.body.data.createdBy)).toBe(String(organiser._id));
+  });
+
   it('rejects an event without a location', async () => {
     const { location, ...invalid } = validEvent;
 
     const res = await request(app)
       .post('/api/events')
+      .set(bearer(organiserToken))
       .send(invalid);
 
     expect(res.statusCode).toBe(400);
@@ -71,71 +110,57 @@ describe('POST /api/events', () => {
   it('rejects capacity lower than 1', async () => {
     const res = await request(app)
       .post('/api/events')
+      .set(bearer(organiserToken))
       .send({ ...validEvent, capacity: 0 });
 
     expect(res.statusCode).toBe(400);
   });
-});
 
-it('should reject an event when end date is before start date', async () => {
-    const response = await request(app)
+  it('rejects an event when end date is before start date', async () => {
+    const res = await request(app)
       .post('/api/events')
+      .set(bearer(organiserToken))
       .send({
+        ...validEvent,
         title: 'Invalid Event',
-        description: 'Invalid time range',
         date: '2026-12-10T11:00:00+08:00',
-        endDate: '2026-12-10T09:00:00+08:00',
-        location: 'Hall A',
-        capacity: 30,
-        status: 'published'
+        endDate: '2026-12-10T09:00:00+08:00'
       });
 
-    expect(response.status).toBe(400);
-    expect(response.body.success).toBe(false);
-    expect(response.body.message).toMatch(/End date must be later/i);
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toMatch(/End date must be later/i);
   });
-
+});
 
 describe('GET /api/events', () => {
-  it('returns only published events that have not ended', async () => {
+  it('returns only published events that have not ended (public, no login)', async () => {
     const now = Date.now();
 
     const futureStart = new Date(now + 60 * 60 * 1000);
     const futureEnd = new Date(now + 2 * 60 * 60 * 1000);
-
     const pastStart = new Date(now - 3 * 60 * 60 * 1000);
     const pastEnd = new Date(now - 2 * 60 * 60 * 1000);
 
-    // Published and not ended: should be returned
-    await Event.create({
-      ...validEvent,
+    await createEvent({
       title: 'Upcoming Workshop',
       date: futureStart,
       endDate: futureEnd,
       status: 'published'
     });
-
-    // Draft: should not be returned
-    await Event.create({
-      ...validEvent,
+    await createEvent({
       title: 'Draft Workshop',
       date: futureStart,
       endDate: futureEnd,
       status: 'draft'
     });
-
-    // Cancelled: should not be returned
-    await Event.create({
-      ...validEvent,
+    await createEvent({
       title: 'Cancelled Workshop',
       date: futureStart,
       endDate: futureEnd,
       status: 'cancelled'
     });
-
-    // Already ended: should not be returned
-    await Event.create({
-      ...validEvent,
+    await createEvent({
       title: 'Past Workshop',
       date: pastStart,
       endDate: pastEnd,
@@ -152,13 +177,51 @@ describe('GET /api/events', () => {
   });
 });
 
+describe('GET /api/events/mine', () => {
+  it('returns only the organiser\'s own events, including drafts', async () => {
+    const future = {
+      date: new Date(Date.now() + 60 * 60 * 1000),
+      endDate: new Date(Date.now() + 2 * 60 * 60 * 1000)
+    };
+
+    await createEvent({ ...future, title: 'My Published', status: 'published' });
+    await createEvent({ ...future, title: 'My Draft', status: 'draft' });
+    await createEvent({
+      ...future,
+      title: 'Someone Else',
+      createdBy: otherOrganiser._id
+    });
+
+    const res = await request(app)
+      .get('/api/events/mine')
+      .set(bearer(organiserToken));
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.count).toBe(2);
+
+    const titles = res.body.data.map((event) => event.title).sort();
+    expect(titles).toEqual(['My Draft', 'My Published']);
+  });
+
+  it('returns 403 for an attendee', async () => {
+    const res = await request(app)
+      .get('/api/events/mine')
+      .set(bearer(attendeeToken));
+
+    expect(res.statusCode).toBe(403);
+  });
+
+  it('returns 401 without a token', async () => {
+    const res = await request(app).get('/api/events/mine');
+    expect(res.statusCode).toBe(401);
+  });
+});
 
 describe('GET /api/events/:id', () => {
   it('returns one event', async () => {
-    const event = await Event.create(validEvent);
+    const event = await createEvent();
 
-    const res = await request(app)
-      .get(`/api/events/${event._id}`);
+    const res = await request(app).get(`/api/events/${event._id}`);
 
     expect(res.statusCode).toBe(200);
     expect(res.body.data.title).toBe('Docker Workshop');
@@ -167,15 +230,13 @@ describe('GET /api/events/:id', () => {
   it('returns 404 when the event does not exist', async () => {
     const missingId = new mongoose.Types.ObjectId();
 
-    const res = await request(app)
-      .get(`/api/events/${missingId}`);
+    const res = await request(app).get(`/api/events/${missingId}`);
 
     expect(res.statusCode).toBe(404);
   });
 
   it('returns 400 for an invalid id', async () => {
-    const res = await request(app)
-      .get('/api/events/not-a-valid-id');
+    const res = await request(app).get('/api/events/not-a-valid-id');
 
     expect(res.statusCode).toBe(400);
   });
@@ -183,10 +244,11 @@ describe('GET /api/events/:id', () => {
 
 describe('PUT /api/events/:id', () => {
   it('updates an event and saves the change', async () => {
-    const event = await Event.create(validEvent);
+    const event = await createEvent();
 
     const res = await request(app)
       .put(`/api/events/${event._id}`)
+      .set(bearer(organiserToken))
       .send({ capacity: 80, location: 'Hall B' });
 
     expect(res.statusCode).toBe(200);
@@ -200,10 +262,11 @@ describe('PUT /api/events/:id', () => {
   });
 
   it('rejects an invalid update', async () => {
-    const event = await Event.create(validEvent);
+    const event = await createEvent();
 
     const res = await request(app)
       .put(`/api/events/${event._id}`)
+      .set(bearer(organiserToken))
       .send({ capacity: 0 });
 
     expect(res.statusCode).toBe(400);
@@ -214,6 +277,7 @@ describe('PUT /api/events/:id', () => {
 
     const res = await request(app)
       .put(`/api/events/${missingId}`)
+      .set(bearer(organiserToken))
       .send({ capacity: 10 });
 
     expect(res.statusCode).toBe(404);
@@ -222,10 +286,11 @@ describe('PUT /api/events/:id', () => {
 
 describe('DELETE /api/events/:id', () => {
   it('deletes an event', async () => {
-    const event = await Event.create(validEvent);
+    const event = await createEvent();
 
     const res = await request(app)
-      .delete(`/api/events/${event._id}`);
+      .delete(`/api/events/${event._id}`)
+      .set(bearer(organiserToken));
 
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
@@ -239,8 +304,83 @@ describe('DELETE /api/events/:id', () => {
     const missingId = new mongoose.Types.ObjectId();
 
     const res = await request(app)
-      .delete(`/api/events/${missingId}`);
+      .delete(`/api/events/${missingId}`)
+      .set(bearer(organiserToken));
 
     expect(res.statusCode).toBe(404);
+  });
+});
+
+describe('Role-based access control', () => {
+  it('returns 401 when creating an event without a token', async () => {
+    const res = await request(app).post('/api/events').send(validEvent);
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('returns 403 when an attendee creates an event', async () => {
+    const res = await request(app)
+      .post('/api/events')
+      .set(bearer(attendeeToken))
+      .send(validEvent);
+
+    expect(res.statusCode).toBe(403);
+    expect(await Event.countDocuments()).toBe(0);
+  });
+
+  it('returns 403 when an attendee updates an event', async () => {
+    const event = await createEvent();
+
+    const res = await request(app)
+      .put(`/api/events/${event._id}`)
+      .set(bearer(attendeeToken))
+      .send({ capacity: 99 });
+
+    expect(res.statusCode).toBe(403);
+  });
+
+  it('returns 401 when deleting without a token', async () => {
+    const event = await createEvent();
+
+    const res = await request(app).delete(`/api/events/${event._id}`);
+
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('returns 403 when an attendee deletes an event', async () => {
+    const event = await createEvent();
+
+    const res = await request(app)
+      .delete(`/api/events/${event._id}`)
+      .set(bearer(attendeeToken));
+
+    expect(res.statusCode).toBe(403);
+    expect(await Event.findById(event._id)).not.toBeNull();
+  });
+});
+
+describe('Event ownership', () => {
+  it('returns 403 when another organiser updates the event', async () => {
+    const event = await createEvent();
+
+    const res = await request(app)
+      .put(`/api/events/${event._id}`)
+      .set(bearer(otherOrganiserToken))
+      .send({ capacity: 99 });
+
+    expect(res.statusCode).toBe(403);
+
+    const saved = await Event.findById(event._id);
+    expect(saved.capacity).toBe(50); // unchanged
+  });
+
+  it('returns 403 when another organiser deletes the event', async () => {
+    const event = await createEvent();
+
+    const res = await request(app)
+      .delete(`/api/events/${event._id}`)
+      .set(bearer(otherOrganiserToken));
+
+    expect(res.statusCode).toBe(403);
+    expect(await Event.findById(event._id)).not.toBeNull();
   });
 });

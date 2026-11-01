@@ -47,6 +47,14 @@ const eventSchema = new mongoose.Schema(
       type: String,
       enum: ['draft', 'published', 'cancelled'],
       default: 'published'
+    },
+
+    // The organiser who owns this event
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Event creator is required'],
+      index: true
     }
   },
   {

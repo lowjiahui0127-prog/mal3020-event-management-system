@@ -1,4 +1,4 @@
-<section class="registrations-page">
+<section class="page">
   <header class="page-header">
     <p class="eyebrow">YOUR ACTIVITY</p>
     <h1>My Registrations</h1>
@@ -8,99 +8,111 @@
   </header>
 
   @if (isLoading()) {
-    <section class="registrations-list" aria-label="Loading registrations">
-      @for (item of [1, 2]; track item) {
-        <article class="registration-card skeleton-card">
-          <div class="skeleton skeleton-image"></div>
-
-          <div class="registration-content">
+    <ul class="list" aria-label="Loading registrations" aria-busy="true">
+      @for (item of skeletonItems; track item) {
+        <li class="card skeleton-card">
+          <div class="skeleton skeleton-date"></div>
+          <div class="info">
+            <div class="skeleton skeleton-chip"></div>
             <div class="skeleton skeleton-title"></div>
             <div class="skeleton skeleton-line"></div>
-            <div class="skeleton skeleton-line short"></div>
           </div>
-
-          <div class="skeleton skeleton-button"></div>
-        </article>
+        </li>
       }
-    </section>
+    </ul>
   } @else if (errorMessage()) {
     <section class="empty-state" role="alert">
       <div class="empty-icon">
-        <fa-icon [icon]="faRotateRight"></fa-icon>
+        <fa-icon [icon]="faRotateRight" aria-hidden="true" />
       </div>
-
       <h2>Something went wrong</h2>
       <p>{{ errorMessage() }}</p>
-
-      <button class="primary-button" type="button" (click)="retry()">
-        Try again
-      </button>
+      <button class="btn" type="button" (click)="retry()">Try again</button>
     </section>
-  } @else if (registrations().length > 0) {
-    <section class="registrations-list" aria-label="Your registrations">
-      @for (registration of registrations(); track registration.id) {
-        <article class="registration-card">
-          <div class="event-placeholder">
-            <fa-icon [icon]="faCalendarDays"></fa-icon>
-          </div>
-
-          <div class="registration-content">
-            <div class="event-heading">
-              <h2>{{ registration.eventTitle }}</h2>
-
-              <span
-                class="status-chip"
-                [class.confirmed]="registration.status === 'confirmed'"
-                [class.cancelled]="registration.status === 'cancelled'"
-                [class.pending]="registration.status === 'pending'"
-              >
-                {{ registration.status | titlecase }}
-              </span>
-            </div>
-
-            <p class="event-meta">
-              <fa-icon [icon]="faCalendarDays"></fa-icon>
-              {{ registration.eventDate | date: 'EEE, d MMM yyyy · HH:mm' }}
-            </p>
-
-            <p class="event-meta">
-              <fa-icon [icon]="faLocationDot"></fa-icon>
-              {{ registration.eventLocation }}
-            </p>
-          </div>
-
-          <a
-            class="details-button"
-            [routerLink]="['/my-registrations', registration.id]"
-          >
-            View details
-          </a>
-        </article>
-      }
-    </section>
-  } @else {
+  } @else if (registrations().length === 0) {
     <section class="empty-state">
       <div class="empty-icon">
-        <fa-icon [icon]="faCalendarDays"></fa-icon>
+        <fa-icon [icon]="faCalendarDays" aria-hidden="true" />
       </div>
-
       <h2>Your next experience is waiting</h2>
-      <p class="empty-description">
-        You haven't registered for any events yet.<br />
-        Find a workshop, a talk, or something entirely new.
+      <p>
+        You haven't registered for any events yet. Find a workshop, a talk,
+        or something entirely new.
       </p>
-
-      <a class="primary-button" routerLink="/events">
-        Explore Events
-      </a>
+      <a class="btn" routerLink="/events">Explore Events</a>
     </section>
+  } @else {
+    <div class="filters" role="group" aria-label="Filter registrations">
+      @for (filter of filters; track filter.id) {
+        <button
+          type="button"
+          class="filter"
+          [class.active]="activeFilter() === filter.id"
+          [attr.aria-pressed]="activeFilter() === filter.id"
+          (click)="activeFilter.set(filter.id)"
+        >
+          {{ filter.label }}
+          <span class="count">{{ groups()[filter.id].length }}</span>
+        </button>
+      }
+    </div>
+
+    @if (visible().length === 0) {
+      <section class="empty-state compact">
+        <h2>{{ emptyCopy().title }}</h2>
+        <p>{{ emptyCopy().text }}</p>
+        @if (activeFilter() === 'upcoming') {
+          <a class="btn" routerLink="/events">Explore Events</a>
+        }
+      </section>
+    } @else {
+      <ul class="list" aria-label="Your registrations">
+        @for (registration of visible(); track registration._id; let i = $index) {
+          <li
+            class="card reveal"
+            [style.--i]="i"
+            [class.is-muted]="statusOf(registration) !== 'confirmed'"
+          >
+            <div class="date" aria-hidden="true">
+              <span>{{ registration.event.date | date: 'MMM' }}</span>
+              <strong>{{ registration.event.date | date: 'dd' }}</strong>
+            </div>
+
+            <div class="info">
+              <div class="info-top">
+                <span class="status-chip" [attr.data-status]="statusOf(registration)">
+                  {{ statusLabel(registration) }}
+                </span>
+                <span class="reference">{{ reference(registration) }}</span>
+              </div>
+
+              <h2>{{ registration.event.title }}</h2>
+
+              <p class="meta">
+                <fa-icon [icon]="faCalendarDays" aria-hidden="true" />
+                {{ registration.event.date | date: 'EEE, d MMM y · HH:mm' }}
+              </p>
+              <p class="meta">
+                <fa-icon [icon]="faLocationDot" aria-hidden="true" />
+                {{ registration.event.location }}
+              </p>
+            </div>
+
+            <a class="open-link" [routerLink]="['/my-registrations', registration._id]">
+              View details
+              <fa-icon [icon]="faArrowRight" aria-hidden="true" />
+            </a>
+          </li>
+        }
+      </ul>
+    }
   }
 
   <div class="bottom-prompt">
     <span>Looking for something else?</span>
     <a routerLink="/events">
       Explore Events
-      <fa-icon [icon]="faArrowRight"></fa-icon>
+      <fa-icon [icon]="faArrowRight" aria-hidden="true" />
     </a>
   </div>
 </section>

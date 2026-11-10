@@ -85,3 +85,32 @@ body {
     transition: none !important;
   }
 }
+
+/* Status chips (registrations) */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border: 1px solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.status-chip[data-status='confirmed'] { background: var(--lime); }
+.status-chip[data-status='completed'] { background: var(--ink); color: var(--paper); }
+.status-chip[data-status='cancelled'],
+.status-chip[data-status='event-cancelled'] {
+  border-color: var(--danger);
+  background: transparent;
+  color: var(--danger);
+}
+
+/* Button variants */
+.btn--block { width: 100%; justify-content: center; }
+.btn--danger { background: transparent; border-color: var(--danger); color: var(--danger); }
+.btn--danger:hover:not(:disabled) { background: var(--danger); color: var(--white); }
+.btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }

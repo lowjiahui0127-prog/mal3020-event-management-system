@@ -1,50 +1,123 @@
-<section class="details-page">
+<section class="page">
   <a class="back-link" routerLink="/my-registrations">
-    <fa-icon [icon]="faArrowLeft"></fa-icon>
+    <fa-icon [icon]="faArrowLeft" aria-hidden="true" />
     Back to My Registrations
   </a>
 
-  <header class="page-header">
-    <p class="eyebrow">YOUR ACTIVITY</p>
-    <h1>Registration Details</h1>
-    <p class="subtitle">
-      View your registration information and event details in one place.
-    </p>
-  </header>
-
-  <section class="details-card">
-    <div class="details-card-header">
-      <div class="ticket-icon">
-        <fa-icon [icon]="faTicket"></fa-icon>
-      </div>
-
-      <div>
-        <h2>Registration information</h2>
-        <p>Details about your event registration.</p>
-      </div>
+  @if (loading()) {
+    <div class="message"><p>Loading registration...</p></div>
+  } @else if (errorMessage()) {
+    <div class="message error" role="alert">
+      <h1>Unable to display registration</h1>
+      <p>{{ errorMessage() }}</p>
+      <a class="btn" routerLink="/my-registrations">Back to My Registrations</a>
     </div>
-
-    <div class="details-divider"></div>
-
-    <div class="unavailable-state">
-      <div class="info-icon">
-        <fa-icon [icon]="faCircleInfo"></fa-icon>
+  } @else if (registration(); as item) {
+    <header class="page-header reveal">
+      <p class="eyebrow">YOUR REGISTRATION</p>
+      <h1>{{ item.event.title }}</h1>
+      <div class="header-meta">
+        <span class="status-chip" [attr.data-status]="status()">{{ statusLabel() }}</span>
+        <span class="reference">{{ reference() }}</span>
       </div>
+    </header>
 
-      <h3>Registration details are not available yet</h3>
+    <div class="layout">
+      <section class="panel reveal" [style.--i]="1">
+        <h2 class="panel-title">Event</h2>
 
-      <p>
-        This page is ready, but registration data has not been connected
-        to the backend yet. Once registration services are implemented,
-        your event details and registration status will appear here.
-      </p>
+        <dl class="facts">
+          <div class="fact">
+            <dt>Date</dt>
+            <dd>
+              {{ item.event.date | date: 'EEEE, d MMMM y' }}
+              <span class="sub">
+                {{ item.event.date | date: 'HH:mm' }}@if (item.event.endDate) { – {{ item.event.endDate | date: 'HH:mm' }}}
+              </span>
+            </dd>
+          </div>
+          <div class="fact">
+            <dt>Location</dt>
+            <dd>{{ item.event.location }}</dd>
+          </div>
+        </dl>
 
-      <a class="primary-button" routerLink="/events">
-        Explore Events
-        <fa-icon [icon]="faArrowLeft" class="forward-icon"></fa-icon>
-      </a>
+        <div class="panel-actions">
+          <a class="btn btn--ghost" [routerLink]="['/events', item.event._id]">
+            View event page
+          </a>
+        </div>
+      </section>
+
+      <aside class="panel reveal" [style.--i]="2">
+        <h2 class="panel-title">Registration</h2>
+
+        <dl class="facts">
+          <div class="fact">
+            <dt>Reference</dt>
+            <dd class="mono">{{ reference() }}</dd>
+          </div>
+          <div class="fact">
+            <dt>Status</dt>
+            <dd>{{ statusLabel() }}</dd>
+          </div>
+          <div class="fact">
+            <dt>Registered on</dt>
+            <dd>{{ item.registeredAt | date: 'd MMMM y, HH:mm' }}</dd>
+          </div>
+          @if (item.cancelledAt) {
+            <div class="fact">
+              <dt>Cancelled on</dt>
+              <dd>{{ item.cancelledAt | date: 'd MMMM y, HH:mm' }}</dd>
+            </div>
+          }
+        </dl>
+
+        @if (notice()) {
+          <p class="notice">{{ notice() }}</p>
+        }
+
+        @if (canCancel()) {
+          <div class="panel-actions">
+            @if (confirmingCancel()) {
+              <p class="confirm-text">
+                Cancel this registration? Your spot will be released for
+                someone else.
+              </p>
+              <button
+                class="btn btn--danger btn--block"
+                type="button"
+                [disabled]="cancelling()"
+                (click)="cancel()"
+              >
+                {{ cancelling() ? 'Cancelling...' : 'Yes, cancel registration' }}
+              </button>
+              <button
+                class="btn btn--ghost btn--block"
+                type="button"
+                [disabled]="cancelling()"
+                (click)="confirmingCancel.set(false)"
+              >
+                Keep my spot
+              </button>
+            } @else {
+              <button
+                class="btn btn--danger btn--block"
+                type="button"
+                (click)="confirmingCancel.set(true)"
+              >
+                Cancel registration
+              </button>
+            }
+          </div>
+        }
+
+        @if (actionError()) {
+          <p class="action-error" role="alert">{{ actionError() }}</p>
+        }
+      </aside>
     </div>
-  </section>
+  }
 
   <p class="help-text">
     Looking for your other registrations?

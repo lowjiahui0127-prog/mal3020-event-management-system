@@ -331,3 +331,36 @@ h1 {
     min-height: 130px;
   }
 }
+
+/* ---------- Event Spots Progress Bar ---------- */
+.spots {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.spots .bar {
+  flex: 1;
+  height: 4px;
+  background: var(--line-soft);
+}
+
+.spots .bar span {
+  display: block;
+  height: 100%;
+  background: var(--ink);
+  transition: width .6s var(--ease);
+}
+
+.spots-label {
+  color: var(--muted-ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.spots.is-full .bar span { background: var(--danger); }
+.spots.is-full .spots-label { color: var(--danger); }

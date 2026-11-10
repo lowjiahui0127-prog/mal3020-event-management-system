@@ -55,25 +55,112 @@
           <li>
             <fa-icon [icon]="faUserGroup" aria-hidden="true" />
             <div>
-              <small class="fact-label">Capacity</small>
-              <strong>{{ item.capacity }} people</strong>
+              <small class="fact-label">Availability</small>
+              <strong>
+                {{ isFull() ? 'Fully booked' : seatsLeft() + ' of ' + item.capacity + ' spots left' }}
+              </strong>
+              <div class="capacity-bar" [class.is-full]="isFull()" aria-hidden="true">
+                <span [style.width.%]="fillPercent()"></span>
+              </div>
             </div>
           </li>
         </ul>
 
-        @if (item.status === 'published') {
-          <a
-            class="primary-button"
-            routerLink="/login"
-            [queryParams]="{ returnUrl: '/events/' + item._id }"
-          >
-            Log in to register
-          </a>
-        } @else {
-          <p class="status-message">
-            This event is not currently open for registration.
-          </p>
-        }
+        <div class="action">
+          @if (item.status !== 'published') {
+            <p class="status-message">
+              This event is not currently open for registration.
+            </p>
+          } @else if (hasEnded()) {
+            <p class="status-message">This event has ended.</p>
+          } @else if (!auth.isLoggedIn()) {
+            <a
+              class="primary-button"
+              routerLink="/login"
+              [queryParams]="{ returnUrl: '/events/' + item._id }"
+            >
+              Log in to register
+            </a>
+            <p class="hint">
+              New here?
+              <a
+                routerLink="/register"
+                [queryParams]="{ returnUrl: '/events/' + item._id }"
+              >Create an account</a>
+            </p>
+          } @else if (auth.role() === 'organiser') {
+            <p class="notice">
+              Organiser accounts can't register for events. Log in with an
+              attendee account to join.
+            </p>
+          } @else if (myRegistration(); as registration) {
+            <div class="registered">
+              <p class="registered-title">
+                <fa-icon [icon]="faCircleCheck" aria-hidden="true" />
+                You're registered
+              </p>
+
+              <a
+                class="btn btn--ghost btn--block"
+                [routerLink]="['/my-registrations', registration._id]"
+              >
+                View registration
+              </a>
+
+              @if (!hasStarted()) {
+                @if (confirmingCancel()) {
+                  <p class="confirm-text">
+                    Cancel your registration? Your spot will be released for
+                    someone else.
+                  </p>
+                  <div class="confirm-actions">
+                    <button
+                      class="btn btn--danger btn--block"
+                      type="button"
+                      [disabled]="actionBusy()"
+                      (click)="cancel()"
+                    >
+                      {{ actionBusy() ? 'Cancelling...' : 'Yes, cancel registration' }}
+                    </button>
+                    <button
+                      class="btn btn--ghost btn--block"
+                      type="button"
+                      [disabled]="actionBusy()"
+                      (click)="confirmingCancel.set(false)"
+                    >
+                      Keep my spot
+                    </button>
+                  </div>
+                } @else {
+                  <button
+                    class="text-button"
+                    type="button"
+                    (click)="confirmingCancel.set(true)"
+                  >
+                    Cancel registration
+                  </button>
+                }
+              }
+            </div>
+          } @else if (isFull()) {
+            <button class="primary-button" type="button" disabled>
+              Fully booked
+            </button>
+          } @else {
+            <button
+              class="primary-button"
+              type="button"
+              [disabled]="actionBusy()"
+              (click)="register()"
+            >
+              {{ actionBusy() ? 'Registering...' : 'Register for this event' }}
+            </button>
+          }
+
+          @if (actionError()) {
+            <p class="action-error" role="alert">{{ actionError() }}</p>
+          }
+        </div>
       </aside>
     </div>
   }

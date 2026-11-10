@@ -90,7 +90,7 @@ exports.registerForEvent = async (req, res) => {
           $set: { status: 'confirmed', registeredAt: new Date() },
           $unset: { cancelledAt: 1 }
         },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       if (!registration) {
@@ -222,7 +222,7 @@ exports.cancelRegistration = async (req, res) => {
     const cancelled = await Registration.findOneAndUpdate(
       { _id: registration._id, status: 'confirmed' },
       { $set: { status: 'cancelled', cancelledAt: new Date() } },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!cancelled) {

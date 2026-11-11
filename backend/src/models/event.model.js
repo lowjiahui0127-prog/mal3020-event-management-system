@@ -37,6 +37,17 @@ const eventSchema = new mongoose.Schema(
       trim: true
     },
 
+      imageUrl: {
+        type: String,
+        trim: true,
+        default: '',
+        maxlength: [500, 'Image URL cannot exceed 500 characters'],
+        validate: {
+          validator: (value) => !value || /^https?:\/\/\S+$/i.test(value),
+          message: 'Image URL must start with http:// or https://'
+      }
+    },
+
     capacity: {
       type: Number,
       required: [true, 'Capacity is required'],
@@ -47,6 +58,13 @@ const eventSchema = new mongoose.Schema(
       type: String,
       enum: ['draft', 'published', 'cancelled'],
       default: 'published'
+    },
+
+    // Number of confirmed registrations. Only the server changes this.
+    registeredCount: {
+      type: Number,
+      default: 0,
+      min: [0, 'Registered count cannot be negative']
     },
 
     // The organiser who owns this event

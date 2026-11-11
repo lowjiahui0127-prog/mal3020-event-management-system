@@ -162,9 +162,9 @@ h1 {
   margin: 0;
   padding: 0 24px 24px;
   color: var(--danger);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 1.5;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  letter-spacing: 0;
 }
 
 /* ---------- Loading / error ---------- */

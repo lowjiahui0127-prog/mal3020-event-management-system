@@ -8,6 +8,7 @@ const ALLOWED_FIELDS = [
   'date',
   'endDate',
   'location',
+  'imageUrl',
   'capacity',
   'status'
 ];

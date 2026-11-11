@@ -37,6 +37,17 @@ const eventSchema = new mongoose.Schema(
       trim: true
     },
 
+      imageUrl: {
+        type: String,
+        trim: true,
+        default: '',
+        maxlength: [500, 'Image URL cannot exceed 500 characters'],
+        validate: {
+          validator: (value) => !value || /^https?:\/\/\S+$/i.test(value),
+          message: 'Image URL must start with http:// or https://'
+      }
+    },
+
     capacity: {
       type: Number,
       required: [true, 'Capacity is required'],

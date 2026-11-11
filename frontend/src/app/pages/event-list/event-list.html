@@ -44,6 +44,16 @@
         @for (item of filteredEvents(); track item._id; let i = $index) {
           <article class="event-card reveal" [style.--i]="i">
             <div class="event-image">
+              @if (item.imageUrl && !hasImageError(item._id)) {
+                <img
+                  class="event-img"
+                  [src]="item.imageUrl"
+                  alt=""
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                  (error)="markImageError(item._id)"
+                />
+              }
               <div class="date-badge">
                 <span>{{ item.date | date: 'MMM' }}</span>
                 <strong>{{ item.date | date: 'dd' }}</strong>

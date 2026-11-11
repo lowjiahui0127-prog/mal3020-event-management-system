@@ -39,6 +39,9 @@ export class EventDetails implements OnInit {
   readonly actionError = signal('');
   readonly confirmingCancel = signal(false);
 
+  // Image load error state
+  readonly imageFailed = signal(false);
+
   readonly faCalendarDays = faCalendarDays;
   readonly faChevronRight = faChevronRight;
   readonly faCircleCheck = faCircleCheck;
@@ -89,6 +92,7 @@ export class EventDetails implements OnInit {
     this.errorMessage.set('');
     this.actionError.set('');
     this.confirmingCancel.set(false);
+    this.imageFailed.set(false);
     this.event.set(null);
     this.myRegistration.set(null);
 

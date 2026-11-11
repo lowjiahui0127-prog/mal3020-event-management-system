@@ -5,6 +5,7 @@ export interface EventItem {
   date: string;
   endDate: string;
   location: string;
+  imageUrl?: string;
   capacity: number;
   registeredCount: number;
   status: 'draft' | 'published' | 'cancelled';

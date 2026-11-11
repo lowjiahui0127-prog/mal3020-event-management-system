@@ -28,6 +28,17 @@ export class EventList implements OnInit {
   readonly errorMessage = signal('');
   readonly searchTerm = signal('');
 
+  // Events whose image failed to load fall back to the hatch placeholder
+  readonly failedImages = signal<ReadonlySet<string>>(new Set<string>());
+
+  hasImageError(id: string): boolean {
+    return this.failedImages().has(id);
+  }
+
+  markImageError(id: string): void {
+    this.failedImages.update((ids) => new Set(ids).add(id));
+  }
+
   readonly filteredEvents = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
 

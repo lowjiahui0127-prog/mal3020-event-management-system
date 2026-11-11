@@ -15,6 +15,15 @@
     </nav>
 
     <div class="hero reveal" [style.--i]="0">
+      @if (item.imageUrl && !imageFailed()) {
+        <img
+          class="hero-img"
+          [src]="item.imageUrl"
+          [alt]="item.title"
+          referrerpolicy="no-referrer"
+          (error)="imageFailed.set(true)"
+        />
+      }
       <div class="date-badge">
         <span>{{ item.date | date: 'MMM' }}</span>
         <strong>{{ item.date | date: 'dd' }}</strong>

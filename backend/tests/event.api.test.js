@@ -131,6 +131,25 @@ describe('POST /api/events', () => {
     expect(res.body.success).toBe(false);
     expect(res.body.message).toMatch(/End date must be later/i);
   });
+
+  it('stores a valid image URL', async () => {
+    const res = await request(app)
+      .post('/api/events')
+      .set(bearer(organiserToken))
+      .send({ ...validEvent, imageUrl: 'https://example.com/poster.jpg' });
+
+    expect(res.statusCode).toBe(201);
+    expect(res.body.data.imageUrl).toBe('https://example.com/poster.jpg');
+  });
+
+  it('rejects an image URL that is not http(s)', async () => {
+    const res = await request(app)
+      .post('/api/events')
+      .set(bearer(organiserToken))
+      .send({ ...validEvent, imageUrl: 'javascript:alert(1)' });
+
+    expect(res.statusCode).toBe(400);
+  });
 });
 
 describe('GET /api/events', () => {

@@ -45,6 +45,31 @@
       </a>
     </section>
   } @else {
+    @if (notice()) {
+      <p class="notice" role="status">
+        {{ notice() }}
+        <button
+          type="button"
+          class="notice-close"
+          aria-label="Dismiss message"
+          (click)="notice.set('')"
+        >
+          ×
+        </button>
+      </p>
+    }
+
+    <label class="search">
+      <span class="visually-hidden">Search events</span>
+      <input
+        #searchInput
+        type="search"
+        placeholder="Search by title or location"
+        [value]="searchTerm()"
+        (input)="searchTerm.set(searchInput.value)"
+      />
+    </label>
+
     <div class="filters" role="group" aria-label="Filter events">
       @for (filter of filters; track filter.id) {
         <button
@@ -67,7 +92,7 @@
     @if (visible().length === 0) {
       <section class="empty-state compact">
         <h2>Nothing here</h2>
-        <p>No events match this filter.</p>
+        <p>No events match your search or filter.</p>
       </section>
     } @else {
       <ul class="list" aria-label="Your events">
@@ -176,6 +201,10 @@
           </li>
         }
       </ul>
+
+      <p class="result-count">
+        Showing {{ visible().length }} of {{ events().length }} events
+      </p>
     }
   }
 </section>

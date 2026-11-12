@@ -53,6 +53,8 @@ export class EventManagement implements OnInit {
   readonly errorMessage = signal('');
   readonly actionError = signal('');
   readonly activeFilter = signal<Filter>('all');
+  readonly searchTerm = signal('');
+  readonly notice = signal('');
 
   // The event waiting for a second confirmation, and the one being saved
   readonly pending = signal<PendingAction | null>(null);
@@ -78,9 +80,15 @@ export class EventManagement implements OnInit {
 
   readonly visible = computed(() => {
     const filter = this.activeFilter();
+    const term = this.searchTerm().trim().toLowerCase();
     const now = Date.now();
+
     const list = this.events().filter(
-      (event) => filter === 'all' || getEventDisplayStatus(event, now) === filter
+      (event) =>
+        (filter === 'all' || getEventDisplayStatus(event, now) === filter) &&
+        (!term ||
+          event.title.toLowerCase().includes(term) ||
+          event.location.toLowerCase().includes(term))
     );
 
     // Upcoming work first (soonest at the top); everything else newest first
@@ -94,7 +102,18 @@ export class EventManagement implements OnInit {
   });
 
   ngOnInit(): void {
+    this.readNotice();
     this.load();
+  }
+
+  // Create/Edit pages pass a one-time success message through the router state
+  private readNotice(): void {
+    const notice = history.state?.['notice'];
+
+    if (typeof notice === 'string' && notice) {
+      this.notice.set(notice);
+      history.replaceState({ ...history.state, notice: undefined }, '');
+    }
   }
 
   load(): void {

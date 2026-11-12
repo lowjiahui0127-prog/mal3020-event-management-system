@@ -50,3 +50,20 @@ export function getDisplayStatus(
 export function getReference(registration: RegistrationItem): string {
   return `REG-${registration._id.slice(-6).toUpperCase()}`;
 }
+
+// Organiser view: who registered for one of my events
+export interface AttendeeRegistration {
+  _id: string;
+  status: RegistrationStatus;
+  registeredAt: string;
+  cancelledAt?: string;
+  user: { _id: string; name: string; email: string };
+}
+
+// Organiser dashboard activity feed
+export interface RecentRegistration {
+  _id: string;
+  registeredAt: string;
+  user: { _id: string; name: string };
+  event: { _id: string; title: string };
+}

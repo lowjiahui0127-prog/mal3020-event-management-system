@@ -114,3 +114,10 @@ body {
 .btn--danger { background: transparent; border-color: var(--danger); color: var(--danger); }
 .btn--danger:hover:not(:disabled) { background: var(--danger); color: var(--white); }
 .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Event status chips (organiser pages) */
+.status-chip[data-status='published'] { background: var(--lime); }
+.status-chip[data-status='ended'] { background: var(--ink); color: var(--paper); }
+.status-chip[data-status='draft'] { border-style: dashed; color: var(--muted-ink); }
+
+.btn--sm { padding: 8px 12px; font-size: 13px; }

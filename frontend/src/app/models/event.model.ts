@@ -9,6 +9,7 @@ export interface EventItem {
   capacity: number;
   registeredCount: number;
   status: 'draft' | 'published' | 'cancelled';
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }

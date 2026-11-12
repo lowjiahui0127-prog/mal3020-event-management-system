@@ -1,0 +1,219 @@
+<form class="form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  @if (serverError()) {
+    <div class="form-message" role="alert">
+      <strong>
+        {{ mode() === 'create' ? "We couldn't create the event" : "We couldn't save your changes" }}
+      </strong>
+      <p>{{ serverError() }}</p>
+    </div>
+  }
+
+  @if (attempted() && form.invalid) {
+    <p class="form-summary" role="alert">
+      Please fix the highlighted fields below.
+    </p>
+  }
+
+  <!-- ===== Basics ===== -->
+  <section class="group reveal" [style.--i]="0">
+    <h2 class="group-title">Basics</h2>
+    <div class="group-body">
+      <div class="field">
+        <label for="title">Title</label>
+        <input
+          id="title"
+          type="text"
+          formControlName="title"
+          maxlength="100"
+          placeholder="e.g. Docker Workshop"
+          autocomplete="off"
+          [class.invalid]="invalid('title')"
+          [attr.aria-invalid]="invalid('title')"
+          [attr.aria-describedby]="invalid('title') ? 'title-error' : null"
+        />
+        @if (invalid('title')) {
+          <small class="field-error" id="title-error">{{ errorMessage('title') }}</small>
+        }
+      </div>
+
+      <div class="field">
+        <label for="description">
+          Description <span class="optional">optional</span>
+        </label>
+        <textarea
+          id="description"
+          rows="6"
+          formControlName="description"
+          placeholder="What will attendees learn or do? Who is it for?"
+        ></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== When & where ===== -->
+  <section class="group reveal" [style.--i]="1">
+    <h2 class="group-title">When &amp; where</h2>
+    <div class="group-body">
+      <div class="row">
+        <div class="field">
+          <label for="date">Starts</label>
+          <input
+            id="date"
+            type="datetime-local"
+            formControlName="date"
+            [attr.min]="minStart()"
+            [class.invalid]="invalid('date')"
+            [attr.aria-invalid]="invalid('date')"
+            [attr.aria-describedby]="invalid('date') ? 'date-error' : null"
+          />
+          @if (invalid('date')) {
+            <small class="field-error" id="date-error">{{ errorMessage('date') }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="endDate">Ends</label>
+          <input
+            id="endDate"
+            type="datetime-local"
+            formControlName="endDate"
+            [attr.min]="minStart()"
+            [class.invalid]="invalid('endDate')"
+            [attr.aria-invalid]="invalid('endDate')"
+            [attr.aria-describedby]="invalid('endDate') ? 'endDate-error' : null"
+          />
+          @if (invalid('endDate')) {
+            <small class="field-error" id="endDate-error">{{ errorMessage('endDate') }}</small>
+          }
+        </div>
+      </div>
+
+      <p class="hint">Times use your device's time zone: {{ timeZone }}.</p>
+
+      <div class="field">
+        <label for="location">Location</label>
+        <input
+          id="location"
+          type="text"
+          formControlName="location"
+          placeholder="e.g. Hall B"
+          autocomplete="off"
+          [class.invalid]="invalid('location')"
+          [attr.aria-invalid]="invalid('location')"
+          [attr.aria-describedby]="invalid('location') ? 'location-error' : null"
+        />
+        @if (invalid('location')) {
+          <small class="field-error" id="location-error">{{ errorMessage('location') }}</small>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Poster ===== -->
+  <section class="group reveal" [style.--i]="2">
+    <h2 class="group-title">Poster</h2>
+    <div class="group-body">
+      <div class="field">
+        <label for="imageUrl">
+          Image URL <span class="optional">optional</span>
+        </label>
+        <input
+          id="imageUrl"
+          type="url"
+          inputmode="url"
+          formControlName="imageUrl"
+          placeholder="https://example.com/poster.jpg"
+          autocomplete="off"
+          [class.invalid]="invalid('imageUrl')"
+          [attr.aria-invalid]="invalid('imageUrl')"
+          [attr.aria-describedby]="invalid('imageUrl') ? 'imageUrl-error' : 'imageUrl-hint'"
+        />
+        @if (invalid('imageUrl')) {
+          <small class="field-error" id="imageUrl-error">{{ errorMessage('imageUrl') }}</small>
+        }
+        <p class="hint" id="imageUrl-hint">
+          Recommended 16:9, at least 1200 px wide. Use a direct link to an
+          image. It shows in black and white in lists and in colour on the
+          event page.
+        </p>
+      </div>
+
+      <div class="preview" aria-label="Image preview">
+        @if (previewUrl() && !previewFailed()) {
+          <img
+            [src]="previewUrl()"
+            alt="Preview of the event image"
+            referrerpolicy="no-referrer"
+            (error)="previewFailed.set(true)"
+          />
+        } @else {
+          <span class="preview-label">
+            {{ previewFailed() ? 'Image could not be loaded' : 'EVENTHUB' }}
+          </span>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Capacity & visibility ===== -->
+  <section class="group reveal" [style.--i]="3">
+    <h2 class="group-title">Capacity &amp; visibility</h2>
+    <div class="group-body">
+      <div class="field">
+        <label for="capacity">Capacity</label>
+        <input
+          id="capacity"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          step="1"
+          formControlName="capacity"
+          placeholder="e.g. 50"
+          [class.invalid]="invalid('capacity')"
+          [attr.aria-invalid]="invalid('capacity')"
+          [attr.aria-describedby]="invalid('capacity') ? 'capacity-error' : null"
+        />
+        @if (invalid('capacity')) {
+          <small class="field-error" id="capacity-error">{{ errorMessage('capacity') }}</small>
+        }
+        @if (event(); as item) {
+          @if (item.registeredCount > 0) {
+            <p class="hint">
+              {{ item.registeredCount }} already registered, so the capacity
+              can't go lower than that.
+            </p>
+          }
+        }
+      </div>
+
+      <fieldset class="field choices-field">
+        <legend>Visibility</legend>
+        <div class="choices">
+          @for (option of statusOptions(); track option.value) {
+            <label class="choice">
+              <input type="radio" formControlName="status" [value]="option.value" />
+              <span class="choice-body">
+                <span class="choice-head">
+                  <span class="choice-title">{{ option.title }}</span>
+                  <span class="indicator" aria-hidden="true"></span>
+                </span>
+                <span class="choice-hint">{{ option.hint }}</span>
+              </span>
+            </label>
+          }
+        </div>
+      </fieldset>
+    </div>
+  </section>
+
+  <div class="actions">
+    <a class="btn btn--ghost" routerLink="/organiser/events">Cancel</a>
+    <button class="btn" type="submit" [disabled]="submitting()">
+      @if (submitting()) {
+        {{ mode() === 'create' ? 'Creating...' : 'Saving...' }}
+      } @else {
+        {{ mode() === 'create' ? 'Create event' : 'Save changes' }}
+      }
+    </button>
+  </div>
+</form>

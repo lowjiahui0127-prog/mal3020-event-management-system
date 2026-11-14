@@ -1,4 +1,6 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RealtimeService } from '../../services/realtime.service';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -28,6 +30,9 @@ export class EventDetails implements OnInit {
   private readonly eventApi = inject(EventApi);
   private readonly registrationApi = inject(RegistrationApi);
   protected readonly auth = inject(AuthService);
+
+  private readonly realtime = inject(RealtimeService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly event = signal<EventItem | null>(null);
   readonly loading = signal(true);
@@ -85,6 +90,30 @@ export class EventDetails implements OnInit {
 
       this.loadEvent(id);
     });
+
+    // Live seat counts: when someone else registers, this page updates at once
+    this.realtime.messages$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((message) => {
+        if (message.type !== 'event:counts') return;
+
+        const current = this.event();
+
+        if (current && current._id === message.data.eventId) {
+          this.event.set({
+            ...current,
+            registeredCount: message.data.registeredCount,
+            capacity: message.data.capacity
+          });
+        }
+      });
+
+    this.realtime.reconnected$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        const id = this.event()?._id;
+        if (id) this.refreshEvent(id);
+      });
   }
 
   loadEvent(id: string): void {

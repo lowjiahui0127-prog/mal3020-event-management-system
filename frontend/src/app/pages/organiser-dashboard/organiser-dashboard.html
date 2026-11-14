@@ -3,10 +3,13 @@
     <p class="eyebrow">ORGANISER</p>
     <div class="header-row">
       <h1>Dashboard</h1>
-      <a class="btn" routerLink="/organiser/events/create">
-        <fa-icon [icon]="faPlus" aria-hidden="true" />
-        Create event
-      </a>
+      <div class="header-tools">
+        <app-live-indicator />
+        <a class="btn" routerLink="/organiser/events/create">
+          <fa-icon [icon]="faPlus" aria-hidden="true" />
+          Create event
+        </a>
+      </div>
     </div>
     <p class="subtitle">Monitor your events and registrations at a glance.</p>
   </header>
@@ -80,7 +83,7 @@
         } @else {
           <ul class="event-list">
             @for (item of nextEvents(); track item._id) {
-              <li class="event-row">
+              <li class="event-row" [class.flash]="flashing().has(item._id)">
                 <div class="date" aria-hidden="true">
                   <span>{{ item.date | date: 'MMM' }}</span>
                   <strong>{{ item.date | date: 'dd' }}</strong>

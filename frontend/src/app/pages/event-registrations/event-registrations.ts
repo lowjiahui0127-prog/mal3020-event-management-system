@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -12,18 +13,25 @@ import {
 } from '../../models/event-status';
 import { AttendeeRegistration } from '../../models/registration.model';
 import { getErrorMessage } from '../../utils/http-error';
+import { RealtimeService } from '../../services/realtime.service';
+import { RealtimeMessage } from '../../models/realtime.model';
+import { LiveIndicator } from '../../components/live-indicator/live-indicator';
 
 type Filter = 'all' | 'confirmed' | 'cancelled';
 
 @Component({
   selector: 'app-event-registrations',
-  imports: [DatePipe, RouterLink, FontAwesomeModule],
+  imports: [DatePipe, RouterLink, FontAwesomeModule, LiveIndicator],
   templateUrl: './event-registrations.html',
   styleUrl: './event-registrations.css'
 })
 export class EventRegistrations implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly eventApi = inject(EventApi);
+  private readonly realtime = inject(RealtimeService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly flashing = signal<ReadonlySet<string>>(new Set<string>());
 
   readonly faArrowLeft = faArrowLeft;
 
@@ -96,10 +104,23 @@ export class EventRegistrations implements OnInit {
 
       this.load(id);
     });
+
+    this.realtime.messages$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((message) => this.onMessage(message));
+
+    this.realtime.reconnected$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        const id = this.event()?._id;
+        if (id) this.load(id, true);
+      });
   }
 
-  load(id: string): void {
-    this.isLoading.set(true);
+  load(id: string, silent = false): void {
+    if (!silent) {
+      this.isLoading.set(true);
+    }
     this.errorMessage.set('');
 
     this.eventApi.getEventRegistrations(id).subscribe({
@@ -119,5 +140,52 @@ export class EventRegistrations implements OnInit {
 
   statusLabel(item: AttendeeRegistration): string {
     return item.status === 'confirmed' ? 'Confirmed' : 'Cancelled';
+  }
+
+  private onMessage(message: RealtimeMessage): void {
+    const current = this.event();
+
+    if (!current) return;
+
+    if (message.type === 'event:counts') {
+      if (message.data.eventId === current._id) {
+        this.event.set({
+          ...current,
+          registeredCount: message.data.registeredCount,
+          capacity: message.data.capacity
+        });
+      }
+      return;
+    }
+
+    // Registration messages for other events are ignored
+    if (message.data.event._id !== current._id) return;
+
+    const row: AttendeeRegistration = {
+      _id: message.data._id,
+      status: message.data.status,
+      registeredAt: message.data.registeredAt,
+      cancelledAt: message.data.cancelledAt,
+      user: message.data.user
+    };
+
+    this.registrations.update((list) =>
+      message.type === 'registration:created'
+        ? [row, ...list.filter((item) => item._id !== row._id)]
+        : list.map((item) => (item._id === row._id ? row : item))
+    );
+    this.flash(row._id);
+  }
+
+  private flash(id: string): void {
+    this.flashing.update((ids) => new Set(ids).add(id));
+
+    setTimeout(() => {
+      this.flashing.update((ids) => {
+        const next = new Set(ids);
+        next.delete(id);
+        return next;
+      });
+    }, 1500);
   }
 }

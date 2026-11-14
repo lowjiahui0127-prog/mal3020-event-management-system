@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Event = require('../models/event.model');
 const Registration = require('../models/registration.model');
+const realtime = require('../realtime/hub');
 
 const ALLOWED_FIELDS = [
   'title',
@@ -232,6 +233,9 @@ exports.updateEvent = async (req, res) => {
 
     Object.assign(existingEvent, updates);
     await existingEvent.save();
+
+    // Capacity may have changed: let open pages update their seat counts
+    realtime.publishEventCounts(existingEvent);
 
     return res.status(200).json({
       success: true,

@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -12,15 +13,23 @@ import { EventApi } from '../../services/event-api';
 import { EventItem } from '../../models/event.model';
 import { RecentRegistration } from '../../models/registration.model';
 import { getErrorMessage } from '../../utils/http-error';
+import { RealtimeService } from '../../services/realtime.service';
+import { RealtimeMessage, RegistrationActivity } from '../../models/realtime.model';
+import { LiveIndicator } from '../../components/live-indicator/live-indicator';
 
 @Component({
   selector: 'app-organiser-dashboard',
-  imports: [DatePipe, RouterLink, FontAwesomeModule],
+  imports: [DatePipe, RouterLink, FontAwesomeModule, LiveIndicator],
   templateUrl: './organiser-dashboard.html',
   styleUrl: './organiser-dashboard.css'
 })
 export class OrganiserDashboard implements OnInit {
   private readonly eventApi = inject(EventApi);
+  private readonly realtime = inject(RealtimeService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  // Events whose numbers just changed (they flash briefly)
+  readonly flashing = signal<ReadonlySet<string>>(new Set<string>());
 
   readonly faArrowRight = faArrowRight;
   readonly faPlus = faPlus;
@@ -74,10 +83,25 @@ export class OrganiserDashboard implements OnInit {
   ngOnInit(): void {
     this.loadEvents();
     this.loadRecent();
+
+    // Live updates pushed by the server
+    this.realtime.messages$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((message) => this.onMessage(message));
+
+    // After a dropped connection, fetch everything again so the numbers are right
+    this.realtime.reconnected$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.loadEvents(true);
+        this.loadRecent();
+      });
   }
 
-  loadEvents(): void {
-    this.isLoading.set(true);
+  loadEvents(silent = false): void {
+    if (!silent) {
+      this.isLoading.set(true);
+    }
     this.errorMessage.set('');
 
     this.eventApi.getMyEvents().subscribe({
@@ -108,6 +132,62 @@ export class OrganiserDashboard implements OnInit {
         this.recentLoading.set(false);
       }
     });
+  }
+
+  private onMessage(message: RealtimeMessage): void {
+    switch (message.type) {
+      case 'event:counts':
+        this.applyCounts(message.data);
+        break;
+      case 'registration:created':
+        this.addToFeed(message.data);
+        break;
+      case 'registration:cancelled':
+        this.recent.update((list) =>
+          list.filter((item) => item._id !== message.data._id)
+        );
+        break;
+    }
+  }
+
+  // Counts are public, so ignore events that are not mine
+  private applyCounts(data: { eventId: string; registeredCount: number; capacity: number }): void {
+    if (!this.events().some((event) => event._id === data.eventId)) return;
+
+    this.events.update((list) =>
+      list.map((event) =>
+        event._id === data.eventId
+          ? { ...event, registeredCount: data.registeredCount, capacity: data.capacity }
+          : event
+      )
+    );
+    this.flash(data.eventId);
+  }
+
+  private addToFeed(activity: RegistrationActivity): void {
+    const entry: RecentRegistration = {
+      _id: activity._id,
+      registeredAt: activity.registeredAt,
+      user: { _id: activity.user._id, name: activity.user.name },
+      event: activity.event
+    };
+
+    // Newest first; a re-registration reuses the same id, so replace instead of duplicating
+    this.recent.update((list) =>
+      [entry, ...list.filter((item) => item._id !== entry._id)].slice(0, 8)
+    );
+  }
+
+  private flash(id: string): void {
+    this.flashing.update((ids) => new Set(ids).add(id));
+
+    setTimeout(() => {
+      this.flashing.update((ids) => {
+        const next = new Set(ids);
+        next.delete(id);
+        return next;
+      });
+    }, 1500);
   }
 
   percent(event: EventItem): number {

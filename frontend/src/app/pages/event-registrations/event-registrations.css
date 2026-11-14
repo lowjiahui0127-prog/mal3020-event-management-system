@@ -303,3 +303,9 @@ tr.is-cancelled .name { color: var(--muted-ink); }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .search { flex-basis: 100%; }
 }
+
+tr.flash { animation: flash 1.4s var(--ease); }
+
+@keyframes flash {
+  from { background: var(--lime); }
+}

@@ -366,3 +366,20 @@ h1 {
     border-top: 1px solid var(--line-soft);
   }
 }
+
+.header-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+/* A row flashes lime when its numbers change */
+.event-row.flash { animation: flash 1.4s var(--ease); }
+
+@keyframes flash {
+  from { background: var(--lime); }
+}
+
+/* New feed items slide in */
+.feed li { animation: rise .4s var(--ease) both; }

@@ -1,4 +1,6 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RealtimeService } from '../../services/realtime.service';
 import { DatePipe } from '@angular/common';
 import { EventApi } from '../../services/event-api';
 import { EventItem } from '../../models/event.model';
@@ -18,6 +20,8 @@ import { RouterLink } from '@angular/router';
 })
 export class EventList implements OnInit {
   private readonly eventApi = inject(EventApi);
+  private readonly realtime = inject(RealtimeService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly faClock = faClock;
   readonly faLocationDot = faLocationDot;
@@ -55,6 +59,24 @@ export class EventList implements OnInit {
 
   ngOnInit(): void {
     this.loadEvents();
+
+    this.realtime.messages$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((message) => {
+        if (message.type !== 'event:counts') return;
+
+        this.events.update((list) =>
+          list.map((item) =>
+            item._id === message.data.eventId
+              ? {
+                  ...item,
+                  registeredCount: message.data.registeredCount,
+                  capacity: message.data.capacity
+                }
+              : item
+          )
+        );
+      });
   }
 
   loadEvents(): void {

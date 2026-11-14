@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Event = require('../models/event.model');
 const Registration = require('../models/registration.model');
+const realtime = require('../realtime/hub');
 
 // Event fields returned together with a registration
 const EVENT_FIELDS =
@@ -73,7 +74,8 @@ exports.registerForEvent = async (req, res) => {
         status: 'published',
         $expr: { $lt: [{ $ifNull: ['$registeredCount', 0] }, '$capacity'] }
       },
-      { $inc: { registeredCount: 1 } }
+      { $inc: { registeredCount: 1 } },
+      { returnDocument: 'after' }
     );
 
     if (!reserved) {
@@ -114,6 +116,12 @@ exports.registerForEvent = async (req, res) => {
     }
 
     await registration.populate('event', EVENT_FIELDS);
+
+    realtime.publishRegistrationCreated({
+      registration,
+      event: reserved,
+      user: req.user
+    });
 
     return res.status(201).json({
       success: true,
@@ -234,7 +242,18 @@ exports.cancelRegistration = async (req, res) => {
       { $inc: { registeredCount: -1 } }
     );
 
+    // Read the event again so the broadcast carries the up-to-date seat count
+    const freshEvent = await Event.findById(registration.event._id);
+
     await cancelled.populate('event', EVENT_FIELDS);
+
+    if (freshEvent) {
+      realtime.publishRegistrationCancelled({
+        registration: cancelled,
+        event: freshEvent,
+        user: req.user
+      });
+    }
 
     return res.status(200).json({
       success: true,

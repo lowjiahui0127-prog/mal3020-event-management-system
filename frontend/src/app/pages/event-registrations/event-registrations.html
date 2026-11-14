@@ -1,1 +1,147 @@
-<p>event-registrations works!</p>
+<section class="page">
+  <a class="back-link" routerLink="/organiser/events">
+    <fa-icon [icon]="faArrowLeft" aria-hidden="true" />
+    Back to Manage events
+  </a>
+
+  @if (isLoading()) {
+    <div class="message"><p>Loading registrations...</p></div>
+  } @else if (errorMessage()) {
+    <div class="message error" role="alert">
+      <h1>Unable to display registrations</h1>
+      <p>{{ errorMessage() }}</p>
+      <a class="btn" routerLink="/organiser/events">Back to Manage events</a>
+    </div>
+  } @else if (event(); as item) {
+    <header class="page-header reveal">
+      <p class="eyebrow">REGISTRATIONS</p>
+      <h1>{{ item.title }}</h1>
+
+      <div class="header-meta">
+        <span class="status-chip" [attr.data-status]="eventStatus()">
+          {{ eventStatusLabel() }}
+        </span>
+        <span class="meta">{{ item.date | date: 'EEE, d MMM y · HH:mm' }}</span>
+        <span class="meta">{{ item.location }}</span>
+      </div>
+
+      <div class="header-actions">
+        <a
+          class="btn btn--sm btn--ghost"
+          [routerLink]="['/organiser/events', item._id, 'edit']"
+        >
+          Edit event
+        </a>
+        <a class="btn btn--sm btn--ghost" [routerLink]="['/events', item._id]">
+          View public page
+        </a>
+      </div>
+    </header>
+
+    <dl class="stats">
+      <div class="stat reveal" [style.--i]="0">
+        <dt>Registered</dt>
+        <dd>{{ item.registeredCount }}</dd>
+      </div>
+      <div class="stat reveal" [style.--i]="1">
+        <dt>Cancelled</dt>
+        <dd>{{ counts().cancelled }}</dd>
+      </div>
+      <div class="stat reveal" [style.--i]="2">
+        <dt>Spots left</dt>
+        <dd>{{ spotsLeft() }}<span class="unit">/ {{ item.capacity }}</span></dd>
+      </div>
+      <div class="stat reveal" [style.--i]="3">
+        <dt>Seats filled</dt>
+        <dd>{{ fillPercent() }}<span class="unit">%</span></dd>
+      </div>
+    </dl>
+
+    <div class="toolbar">
+      <div class="filters" role="group" aria-label="Filter attendees">
+        @for (filter of filters; track filter.id) {
+          <button
+            type="button"
+            class="filter"
+            [class.active]="activeFilter() === filter.id"
+            [attr.aria-pressed]="activeFilter() === filter.id"
+            (click)="activeFilter.set(filter.id)"
+          >
+            {{ filter.label }}
+            <span class="count">{{ counts()[filter.id] }}</span>
+          </button>
+        }
+      </div>
+
+      <label class="search">
+        <span class="visually-hidden">Search attendees</span>
+        <input
+          #searchInput
+          type="search"
+          placeholder="Search by name or email"
+          [value]="searchTerm()"
+          (input)="searchTerm.set(searchInput.value)"
+        />
+      </label>
+    </div>
+
+    @if (registrations().length === 0) {
+      <section class="empty-state">
+        <h2>No registrations yet</h2>
+        <p>
+          When attendees register for this event, they will appear here.
+        </p>
+      </section>
+    } @else if (visible().length === 0) {
+      <section class="empty-state compact">
+        <h2>No matching attendees</h2>
+        <p>Try a different filter or search term.</p>
+      </section>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <caption class="visually-hidden">
+            Attendees registered for {{ item.title }}
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Attendee</th>
+              <th scope="col">Status</th>
+              <th scope="col">Registered</th>
+              <th scope="col">Cancelled</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of visible(); track row._id) {
+              <tr [class.is-cancelled]="row.status === 'cancelled'">
+                <td>
+                  <span class="name">{{ row.user.name }}</span>
+                  <a class="email" [href]="'mailto:' + row.user.email">
+                    {{ row.user.email }}
+                  </a>
+                </td>
+                <td>
+                  <span class="status-chip" [attr.data-status]="row.status">
+                    {{ statusLabel(row) }}
+                  </span>
+                </td>
+                <td class="when">{{ row.registeredAt | date: 'd MMM y, HH:mm' }}</td>
+                <td class="when">
+                  @if (row.cancelledAt) {
+                    {{ row.cancelledAt | date: 'd MMM y, HH:mm' }}
+                  } @else {
+                    —
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <p class="result-count">
+        Showing {{ visible().length }} of {{ registrations().length }} registrations
+      </p>
+    }
+  }
+</section>

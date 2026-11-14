@@ -1,0 +1,280 @@
+:host {
+  display: block;
+}
+
+.form {
+  max-width: 760px;
+}
+
+/* ---------- Groups (flat panels, same as the details pages) ---------- */
+.group {
+  margin-bottom: 24px;
+  border: 1px solid var(--ink);
+  background: var(--white);
+}
+
+.group-title {
+  margin: 0;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--ink);
+  color: var(--muted-ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.group-body {
+  display: grid;
+  gap: 20px;
+  padding: 24px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* ---------- Fields (same look as the login form) ---------- */
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.field label,
+.field legend {
+  padding: 0;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.optional {
+  margin-left: 6px;
+  color: var(--muted-ink);
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.field input[type='text'],
+.field input[type='url'],
+.field input[type='number'],
+.field input[type='datetime-local'],
+.field textarea {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  padding: 0 14px;
+  outline: none;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 15px;
+}
+
+.field textarea {
+  padding: 12px 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--muted-ink);
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+}
+
+.field input.invalid {
+  border-color: var(--danger);
+}
+
+.field-error {
+  color: var(--danger);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ---------- Messages ---------- */
+.form-message {
+  margin-bottom: 20px;
+  border: 1px solid var(--danger);
+  padding: 14px 16px;
+  background: var(--white);
+  color: var(--danger);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.form-message strong {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.form-message p {
+  margin: 6px 0 0;
+  color: var(--ink);
+}
+
+.form-summary {
+  margin: 0 0 20px;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+/* ---------- Image preview (16:9, hatch placeholder like the cards) ---------- */
+.preview {
+  position: relative;
+  display: grid;
+  width: 100%;
+  max-width: 480px;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--ink);
+  background-color: var(--white);
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 9px,
+    var(--line-soft) 9px 10px
+  );
+  overflow: hidden;
+}
+
+.preview img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-label {
+  color: var(--muted-ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+}
+
+/* ---------- Visibility choice cards ---------- */
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.choice {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.choice-body {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--ink);
+  background: var(--white);
+  transition: background .2s var(--ease);
+}
+
+.choice:hover .choice-body { background: #ecece6; }
+
+.choice input:checked + .choice-body,
+.choice:hover input:checked + .choice-body { background: var(--lime); }
+
+.choice input:focus-visible + .choice-body {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.choice-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.choice-title {
+  font-weight: 500;
+}
+
+.choice-hint {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.indicator {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid var(--ink);
+  background: var(--white);
+}
+
+.choice input:checked + .choice-body .indicator { background: var(--ink); }
+
+.choice input:checked + .choice-body .indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  background: var(--lime);
+  transform: translate(-50%, -50%);
+}
+
+/* ---------- Actions ---------- */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+@media (max-width: 600px) {
+  .row { grid-template-columns: 1fr; }
+  .group-body { padding: 20px 16px; }
+  .group-title { padding: 14px 16px; }
+  .actions .btn { flex: 1; justify-content: center; }
+}

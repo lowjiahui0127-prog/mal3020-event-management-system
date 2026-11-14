@@ -1,1 +1,210 @@
-<p>event-management works!</p>
+<section class="page">
+  <header class="page-header">
+    <p class="eyebrow">ORGANISER</p>
+    <div class="header-row">
+      <h1>Manage events</h1>
+      <a class="btn" routerLink="/organiser/events/create">
+        <fa-icon [icon]="faPlus" aria-hidden="true" />
+        Create event
+      </a>
+    </div>
+    <p class="subtitle">
+      Publish, edit and keep track of every event you run.
+    </p>
+  </header>
+
+  @if (isLoading()) {
+    <ul class="list" aria-busy="true" aria-label="Loading events">
+      @for (item of skeletonItems; track item) {
+        <li class="row skeleton-row">
+          <div class="skeleton skeleton-date"></div>
+          <div class="main">
+            <div class="skeleton skeleton-chip"></div>
+            <div class="skeleton skeleton-title"></div>
+            <div class="skeleton skeleton-line"></div>
+          </div>
+        </li>
+      }
+    </ul>
+  } @else if (errorMessage()) {
+    <section class="empty-state" role="alert">
+      <h2>Something went wrong</h2>
+      <p>{{ errorMessage() }}</p>
+      <button class="btn" type="button" (click)="load()">
+        <fa-icon [icon]="faRotateRight" aria-hidden="true" />
+        Try again
+      </button>
+    </section>
+  } @else if (events().length === 0) {
+    <section class="empty-state">
+      <h2>No events yet</h2>
+      <p>Create your first event and publish it when you are ready.</p>
+      <a class="btn" routerLink="/organiser/events/create">
+        <fa-icon [icon]="faPlus" aria-hidden="true" />
+        Create event
+      </a>
+    </section>
+  } @else {
+    @if (notice()) {
+      <p class="notice" role="status">
+        {{ notice() }}
+        <button
+          type="button"
+          class="notice-close"
+          aria-label="Dismiss message"
+          (click)="notice.set('')"
+        >
+          ×
+        </button>
+      </p>
+    }
+
+    <label class="search">
+      <span class="visually-hidden">Search events</span>
+      <input
+        #searchInput
+        type="search"
+        placeholder="Search by title or location"
+        [value]="searchTerm()"
+        (input)="searchTerm.set(searchInput.value)"
+      />
+    </label>
+
+    <div class="filters" role="group" aria-label="Filter events">
+      @for (filter of filters; track filter.id) {
+        <button
+          type="button"
+          class="filter"
+          [class.active]="activeFilter() === filter.id"
+          [attr.aria-pressed]="activeFilter() === filter.id"
+          (click)="activeFilter.set(filter.id)"
+        >
+          {{ filter.label }}
+          <span class="count">{{ counts()[filter.id] }}</span>
+        </button>
+      }
+    </div>
+
+    @if (actionError()) {
+      <p class="action-error" role="alert">{{ actionError() }}</p>
+    }
+
+    @if (visible().length === 0) {
+      <section class="empty-state compact">
+        <h2>Nothing here</h2>
+        <p>No events match your search or filter.</p>
+      </section>
+    } @else {
+      <ul class="list" aria-label="Your events">
+        @for (item of visible(); track item._id; let i = $index) {
+          <li class="row reveal" [style.--i]="i">
+            <div class="date" aria-hidden="true">
+              <span>{{ item.date | date: 'MMM' }}</span>
+              <strong>{{ item.date | date: 'dd' }}</strong>
+            </div>
+
+            <div class="main">
+              <span class="status-chip" [attr.data-status]="statusOf(item)">
+                {{ statusLabel(item) }}
+              </span>
+
+              <h2>{{ item.title }}</h2>
+
+              <p class="meta">
+                <fa-icon [icon]="faCalendarDays" aria-hidden="true" />
+                {{ item.date | date: 'EEE, d MMM y · HH:mm' }}
+              </p>
+              <p class="meta">
+                <fa-icon [icon]="faLocationDot" aria-hidden="true" />
+                {{ item.location }}
+              </p>
+
+              <div class="spots" [class.is-full]="item.registeredCount >= item.capacity">
+                <div class="bar" aria-hidden="true">
+                  <span [style.width.%]="percent(item)"></span>
+                </div>
+                <span class="spots-label">
+                  {{ item.registeredCount }} / {{ item.capacity }} registered
+                </span>
+              </div>
+            </div>
+
+            <div class="actions">
+              @if (isPending(item)) {
+                <p class="confirm-text">{{ confirmText(item) }}</p>
+                <div class="confirm-actions">
+                  <button
+                    class="btn btn--sm btn--danger"
+                    type="button"
+                    [disabled]="busyId() === item._id"
+                    (click)="confirm(item)"
+                  >
+                    {{
+                      busyId() === item._id
+                        ? 'Working...'
+                        : pending()?.action === 'delete'
+                          ? 'Yes, delete'
+                          : 'Yes, cancel event'
+                    }}
+                  </button>
+                  <button
+                    class="btn btn--sm btn--ghost"
+                    type="button"
+                    [disabled]="busyId() === item._id"
+                    (click)="keep()"
+                  >
+                    Keep
+                  </button>
+                </div>
+              } @else {
+                <div class="button-row">
+                  <a
+                    class="btn btn--sm btn--ghost"
+                    [routerLink]="['/organiser/events', item._id, 'registrations']"
+                  >
+                    Registrations
+                  </a>
+                  <a
+                    class="btn btn--sm btn--ghost"
+                    [routerLink]="['/organiser/events', item._id, 'edit']"
+                  >
+                    Edit
+                  </a>
+                  @if (statusOf(item) === 'draft') {
+                    <button
+                      class="btn btn--sm"
+                      type="button"
+                      [disabled]="busyId() === item._id"
+                      (click)="publish(item)"
+                    >
+                      {{ busyId() === item._id ? 'Publishing...' : 'Publish' }}
+                    </button>
+                  }
+                </div>
+
+                <div class="text-row">
+                  @if (statusOf(item) === 'published') {
+                    <button class="text-button" type="button" (click)="ask(item, 'cancel')">
+                      Cancel event
+                    </button>
+                  }
+                  <button
+                    class="text-button text-button--danger"
+                    type="button"
+                    (click)="ask(item, 'delete')"
+                  >
+                    Delete
+                  </button>
+                </div>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+
+      <p class="result-count">
+        Showing {{ visible().length }} of {{ events().length }} events
+      </p>
+    }
+  }
+</section>

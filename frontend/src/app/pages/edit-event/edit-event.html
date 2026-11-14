@@ -1,1 +1,35 @@
-<p>edit-event works!</p>
+<section class="page">
+  <a class="back-link" routerLink="/organiser/events">
+    <fa-icon [icon]="faArrowLeft" aria-hidden="true" />
+    Back to Manage events
+  </a>
+
+  @if (loading()) {
+    <div class="message"><p>Loading event...</p></div>
+  } @else if (errorMessage()) {
+    <div class="message error" role="alert">
+      <h1>Unable to edit this event</h1>
+      <p>{{ errorMessage() }}</p>
+      <a class="btn" routerLink="/organiser/events">Back to Manage events</a>
+    </div>
+  } @else if (event(); as item) {
+    <header class="page-header reveal">
+      <p class="eyebrow">ORGANISER</p>
+      <h1>Edit event</h1>
+      <p class="subtitle">
+        {{ item.title }} · {{ item.registeredCount }} registered ·
+        <a [routerLink]="['/organiser/events', item._id, 'registrations']">
+          View registrations
+        </a>
+      </p>
+    </header>
+
+    <app-event-form
+      mode="edit"
+      [event]="item"
+      [submitting]="submitting()"
+      [serverError]="serverError()"
+      (save)="save($event)"
+    />
+  }
+</section>

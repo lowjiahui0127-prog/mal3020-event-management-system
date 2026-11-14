@@ -245,3 +245,76 @@ exports.cancelRegistration = async (req, res) => {
     return handleError(res, error, 'Failed to cancel registration');
   }
 };
+
+// GET /api/events/:id/registrations (owner of the event only)
+exports.getEventRegistrations = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return badRequest(res, 'Invalid event id');
+    }
+
+    const event = await Event.findById(id);
+
+    if (!event) {
+      return notFound(res, 'Event not found');
+    }
+
+    if (!event.createdBy || !event.createdBy.equals(req.user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only view registrations for your own events'
+      });
+    }
+
+    const registrations = await Registration.find({ event: event._id })
+      .sort({ registeredAt: -1 })
+      .populate('user', 'name email');
+
+    // Skip records whose user account no longer exists
+    const data = registrations.filter((registration) => registration.user);
+
+    return res.status(200).json({
+      success: true,
+      event,
+      count: data.length,
+      data
+    });
+  } catch (error) {
+    return handleError(res, error, 'Failed to fetch event registrations');
+  }
+};
+
+// GET /api/events/mine/recent-registrations (organiser only)
+exports.getRecentRegistrations = async (req, res) => {
+  try {
+    const limit = Math.min(
+      Math.max(Number.parseInt(req.query.limit, 10) || 8, 1),
+      20
+    );
+
+    const myEvents = await Event.find({ createdBy: req.user._id }).select('_id');
+
+    const registrations = await Registration.find({
+      event: { $in: myEvents.map((event) => event._id) },
+      status: 'confirmed'
+    })
+      .sort({ registeredAt: -1 })
+      .limit(limit)
+      .populate('user', 'name') // name only: the feed does not expose emails
+      .populate('event', 'title');
+
+    const data = registrations.filter(
+      (registration) => registration.user && registration.event
+    );
+
+    return res.status(200).json({
+      success: true,
+      count: data.length,
+      data
+    });
+  } catch (error) {
+    return handleError(res, error, 'Failed to fetch recent registrations');
+  }
+};

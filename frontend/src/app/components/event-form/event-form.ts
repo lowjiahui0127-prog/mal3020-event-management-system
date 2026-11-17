@@ -46,7 +46,7 @@ interface StatusOption {
   hint: string;
 }
 
-const IMAGE_URL_PATTERN = /^https?:\/\/\S+$/i;
+const IMAGE_URL_PATTERN = /^(https?:\/\/\S+|\/(?!\/)\S+)$/i;
 const TWO_HOURS = 2 * 60 * 60 * 1000;
 
 function notBlank(control: AbstractControl): ValidationErrors | null {
@@ -278,7 +278,7 @@ export class EventForm implements OnInit {
       case 'imageUrl':
         return errors['maxlength']
           ? 'The link is too long (500 characters at most).'
-          : 'Enter a full link starting with http:// or https://.';
+          : 'Enter a link starting with http:// or https://, or a path starting with /.';
       case 'capacity':
         if (errors['required']) return 'Capacity is required.';
         if (errors['belowRegistered']) {

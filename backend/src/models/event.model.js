@@ -43,8 +43,10 @@ const eventSchema = new mongoose.Schema(
         default: '',
         maxlength: [500, 'Image URL cannot exceed 500 characters'],
         validate: {
-          validator: (value) => !value || /^https?:\/\/\S+$/i.test(value),
-          message: 'Image URL must start with http:// or https://'
+        // A full http(s) link, or a path on this site such as /posters/futsal-cup.jpg
+        validator: (value) =>
+          !value || /^(https?:\/\/\S+|\/(?!\/)\S+)$/i.test(value),
+        message: 'Image must be an http(s) link or a path starting with /'
       }
     },
 

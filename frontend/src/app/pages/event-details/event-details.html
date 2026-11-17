@@ -14,25 +14,27 @@
       <span>{{ item.title }}</span>
     </nav>
 
-    <div class="hero reveal" [style.--i]="0">
-      @if (item.imageUrl && !imageFailed()) {
-        <img
-          class="hero-img"
-          [src]="item.imageUrl"
-          [alt]="item.title"
-          referrerpolicy="no-referrer"
-          (error)="imageFailed.set(true)"
-        />
-      }
-      <div class="date-badge">
-        <span>{{ item.date | date: 'MMM' }}</span>
-        <strong>{{ item.date | date: 'dd' }}</strong>
-      </div>
-      <span class="hero-label">EVENTHUB</span>
-    </div>
-
     <div class="layout">
       <article class="main reveal" [style.--i]="1">
+        <div class="hero" [class.has-image]="item.imageUrl && !imageFailed()">
+          <div class="date-badge">
+            <span>{{ item.date | date: 'MMM' }}</span>
+            <strong>{{ item.date | date: 'dd' }}</strong>
+          </div>
+
+          @if (item.imageUrl && !imageFailed()) {
+            <img
+              class="hero-img"
+              [src]="item.imageUrl"
+              [alt]="item.title"
+              referrerpolicy="no-referrer"
+              (error)="imageFailed.set(true)"
+            />
+          } @else {
+            <span class="hero-label">EVENTHUB</span>
+          }
+        </div>
+
         <h1>{{ item.title }}</h1>
         <h2>About this event</h2>
         <p class="description">

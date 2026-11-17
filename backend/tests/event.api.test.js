@@ -150,6 +150,25 @@ describe('POST /api/events', () => {
 
     expect(res.statusCode).toBe(400);
   });
+
+  it('accepts a path on this site as the image', async () => {
+    const res = await request(app)
+      .post('/api/events')
+      .set(bearer(organiserToken))
+      .send({ ...validEvent, imageUrl: '/posters/futsal-cup.jpg' });
+
+    expect(res.statusCode).toBe(201);
+    expect(res.body.data.imageUrl).toBe('/posters/futsal-cup.jpg');
+  });
+
+  it('rejects a protocol-relative image URL', async () => {
+    const res = await request(app)
+      .post('/api/events')
+      .set(bearer(organiserToken))
+      .send({ ...validEvent, imageUrl: '//evil.example/x.jpg' });
+
+    expect(res.statusCode).toBe(400);
+  });
 });
 
 describe('GET /api/events', () => {

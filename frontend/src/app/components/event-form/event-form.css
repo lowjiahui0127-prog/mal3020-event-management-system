@@ -156,7 +156,7 @@
   width: 100%;
   max-width: 480px;
   place-items: center;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 2 / 1;
   border: 1px solid var(--ink);
   background-color: var(--white);
   background-image: repeating-linear-gradient(

@@ -294,4 +294,15 @@ describe('authentication and robustness', () => {
     const reply = await authenticate(client, ownerToken);
     expect(reply.type).toBe('auth:ok');
   });
+
+  it('tells clients to reconnect (code 1001) when the server shuts down', async () => {
+    const client = await connect();
+    const closed = new Promise((resolve) =>
+      client.socket.once('close', (code) => resolve(code))
+    );
+
+    realtime.closeAll(1001, 'Server restarting');
+
+    expect(await closed).toBe(1001);
+  });
 });

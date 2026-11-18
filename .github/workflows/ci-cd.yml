@@ -1,0 +1,164 @@
+name: CI/CD
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  # ---------- CI: backend ----------
+  backend-ci:
+    name: Backend - lint and tests
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:8
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: ci_test_password
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 }).ok' --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      MONGO_URI_TEST: mongodb://admin:ci_test_password@localhost:27017/eventdb_test?authSource=admin
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Static analysis (ESLint)
+        run: npm run lint
+
+      - name: Run backend tests
+        run: npm test
+
+      - name: Dependency audit (information only)
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
+
+  # ---------- CI: frontend ----------
+  frontend-ci:
+    name: Frontend - tests and build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Angular tests
+        run: npm test -- --watch=false
+
+      - name: Build Angular (production)
+        run: npm run build
+
+  # ---------- CD: images, rollover rehearsal, publish ----------
+  docker:
+    name: Docker images and rollover test
+    # CD only starts when BOTH CI jobs have passed
+    needs: [backend-ci, frontend-ci]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build images and rehearse a zero-downtime rollover
+        run: bash scripts/rollover-test.sh
+
+      - name: Show container logs (only if something failed)
+        if: failure()
+        run: |
+          docker ps -a
+          for id in $(docker ps -aq); do
+            echo "----- $id"
+            docker logs --tail 60 "$id" || true
+          done
+
+      - name: Log in to GitHub Container Registry
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish images (main branch only)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          repo="ghcr.io/${GITHUB_REPOSITORY,,}"
+          for name in backend frontend; do
+            docker tag "eventhub-$name:local" "$repo/$name:$GITHUB_SHA"
+            docker tag "eventhub-$name:local" "$repo/$name:latest"
+            docker push "$repo/$name:$GITHUB_SHA"
+            docker push "$repo/$name:latest"
+          done
+
+  # ---------- Optional: release to a real server after a human approves ----------
+  # Skipped automatically unless you create a repository variable DEPLOY_HOST.
+  # Add an Environment called "production" with "Required reviewers" to get the approval step.
+  deploy:
+    name: Deploy to server (manual approval)
+    needs: docker
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.DEPLOY_HOST != ''
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Blue-green deployment over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /srv/eventhub
+            git pull origin main
+            bash scripts/deploy.sh ghcr.io/${{ github.repository }}/backend:${{ github.sha }} ${{ github.sha }}

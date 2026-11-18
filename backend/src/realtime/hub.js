@@ -57,6 +57,24 @@ class RealtimeHub {
     }
   }
 
+  // Used when the server is shutting down or being replaced: ask every client to
+  // reconnect (code 1001 = "going away"). The new container will accept them.
+  closeAll(code = 1001, reason = 'Server restarting') {
+    if (!this.wss) return;
+
+    for (const socket of this.wss.clients) {
+      socket.close(code, reason);
+    }
+
+    // Anything that does not close politely is cut after a moment
+    setTimeout(() => {
+      if (!this.wss) return;
+      for (const socket of this.wss.clients) {
+        socket.terminate();
+      }
+    }, 2000).unref();
+  }
+
   // ---------- Connections ----------
   handleConnection(socket) {
     socket.isAlive = true;

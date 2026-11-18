@@ -1,15 +1,70 @@
+# One command starts the whole system:  docker compose up -d --build --wait
+#
+# After the first start, deploy new versions with scripts/deploy.sh (blue-green),
+# not with "docker compose up", so users never see downtime.
+
+x-backend: &backend
+  build: ./backend
+  restart: unless-stopped
+  init: true
+  stop_grace_period: 30s
+  depends_on:
+    mongodb:
+      condition: service_healthy
+  environment: &backend-env
+    PORT: 3000
+    MONGO_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/eventdb?authSource=admin
+    JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in the .env file}
+    JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+
 services:
   mongodb:
     image: mongo:8
-    container_name: event-mongodb
     restart: unless-stopped
     ports:
-      - "27019:27017"
+      - "${MONGO_HOST_PORT:-27019}:27017"   # for local development only
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     volumes:
       - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # "blue" and "green" are two copies of the same backend. One serves users while
+  # the other is started, checked and then switched in.
+  backend-blue:
+    <<: *backend
+    image: ${BACKEND_BLUE_IMAGE:-eventhub-backend:local}
+    environment:
+      <<: *backend-env
+      APP_VERSION: ${BACKEND_BLUE_VERSION:-local}
+
+  backend-green:
+    <<: *backend
+    profiles: ["green"]
+    image: ${BACKEND_GREEN_IMAGE:-eventhub-backend:local}
+    environment:
+      <<: *backend-env
+      APP_VERSION: ${BACKEND_GREEN_VERSION:-local}
+
+  frontend:
+    build: ./frontend
+    image: ${FRONTEND_IMAGE:-eventhub-frontend:local}
+    restart: unless-stopped
+    depends_on:
+      backend-blue:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+    volumes:
+      # Holds the file that says which backend is active (survives container re-creation)
+      - nginx_active:/etc/nginx/active
 
 volumes:
   mongodb_data:
+  nginx_active:

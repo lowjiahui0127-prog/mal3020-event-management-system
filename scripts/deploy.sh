@@ -8,7 +8,7 @@
 #   bash scripts/deploy.sh rollback
 #       switch back to the previous version (kept stopped, ready to start)
 set -euo pipefail
-export MSYS_NO_PATHCONV=1
+export MSYS_NO_PATHCONV=1   # Git Bash on Windows must not rewrite /etc/... into C:/Program Files/Git/etc/...
 cd "$(dirname "$0")/.."
 
 export COMPOSE_PROFILES=green   # makes the "green" service visible to every command below

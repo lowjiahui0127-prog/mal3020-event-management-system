@@ -2,6 +2,7 @@
 # Rollover test: replace the running backend with a new version while requests keep
 # flowing, then roll back. Fails if even one request fails.
 set -euo pipefail
+export MSYS_NO_PATHCONV=1   # Git Bash on Windows must not rewrite /etc/... into C:/Program Files/Git/etc/...
 cd "$(dirname "$0")/.."
 
 # A separate project, ports and passwords: never touches your development data

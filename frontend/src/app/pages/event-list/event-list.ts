@@ -89,7 +89,7 @@ export class EventList implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.errorMessage.set('Could not load events. Is the backend running?');
+        this.errorMessage.set('Unable to load events right now. Please try again shortly.');
         this.loading.set(false);
       }
     });

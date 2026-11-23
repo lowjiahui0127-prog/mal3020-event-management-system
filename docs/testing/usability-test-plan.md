@@ -4,7 +4,7 @@
 Find out whether a first-time user can complete the main tasks in EventHub without help, and what slows them down.
 
 ## Participants
-5 to 8 students from different faculties, none of whom saw the system before. Participants are called P1, P2, P3... in all notes.
+4 students (P1 to P4) from different faculties, none of whom saw the system before. Participants are called P1, P2, P3... in all notes.
 
 ## Ethics and consent (read aloud before starting)
 - Taking part is voluntary and you may stop at any time without giving a reason.
@@ -15,7 +15,7 @@ Find out whether a first-time user can complete the main tasks in EventHub witho
 - Do you agree to take part?  [ ] Yes   (tick and write the date) ______
 
 ## Set-up
-Docker stack running, `npm run seed:demo` run before EACH participant (resets the data), Chrome, one laptop. The facilitator does not help. If the participant is stuck for 2 minutes, note "stuck" and move on.
+Docker stack running, `docker compose run --rm backend-blue npm run seed:demo` run before EACH participant (resets the data), Chrome, one laptop. The facilitator does not help. If the participant is stuck for 2 minutes, note "stuck" and move on.
 
 Accounts: demo organiser `organiser@eventhub.test`, demo attendee `attendee@eventhub.test`. For task 2 the participant creates a new account (any made-up email such as `p1@example.test`).
 
